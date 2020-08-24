@@ -1,0 +1,22 @@
+.sr_space_box label{
+    color:white;
+}
+.client-panel{
+    position:fixed;
+    z-index:100;
+    top:0;
+}
+.client-panel-fix .row{
+    padding-left:1%;
+    padding-right:1%;
+}
+.buttons_panel img{
+    border: 3px solid #118BCF;
+    border-radius: 25px;
+}
+
+.buttons_panel img:hover{
+    border: 3px solid #F9B233;
+    border-radius: 25px;
+}
+

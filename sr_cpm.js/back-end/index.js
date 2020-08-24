@@ -19,6 +19,42 @@ connection.connect(err => {
 
 app.use(cors())
 
+//#region Save_ajax
+app.get('/update/one', (req, res) => {
+    const{ table, uid, one, one_val } = req.query
+    const UPDATE_USER_QUERY = `UPDATE ${table} SET ${one}='${one_val}' WHERE uid='${uid}'`
+    connection.query(UPDATE_USER_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.send('Update reussi')
+        }
+    })
+})
+app.get('/update/two', (req, res) => {
+    const{ table, uid, one, one_val, two, two_val } = req.query
+    const UPDATE_USER_QUERY = `UPDATE ${table} SET ${one}='${one_val}',${two}='${two_val}' WHERE uid='${uid}'`
+    connection.query(UPDATE_USER_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.send('Update reussi')
+        }
+    })
+})
+app.get('/update/three', (req, res) => {
+    const{ table, uid, one, one_val, two, two_val, three, three_val } = req.query
+    const UPDATE_USER_QUERY = `UPDATE ${table} SET ${one}='${one_val}',${two}='${two_val}',${three}='${three_val}' WHERE uid='${uid}'`
+    connection.query(UPDATE_USER_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.send('Update reussi')
+        }
+    })
+})
+//#endregion
+
 //#region client
 app.get('/clients', (req, res) => {
     const SELECT_ALL_USER_QUERY = 'SELECT * FROM sr_client'
@@ -163,6 +199,46 @@ app.get('/client_history/add', (req, res) => {
 })
 //#endregion
 
+//#region 
+app.get('/services', (req, res) => {
+    const SELECT_ALL_QUERY = 'SELECT * FROM sr_service WHERE active="yes"'
+    connection.query(SELECT_ALL_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.json({
+                data: result
+            })
+        }
+    })
+})
+app.get('/subservices', (req, res) => {
+    const{ uid_service } = req.query
+    const SELECT_QUERY = `SELECT * FROM sr_subservice WHERE active='yes' AND uid_service='${uid_service}'`
+    connection.query(SELECT_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.json({
+                data: result
+            })
+        }
+    })
+})
+app.get('/address', (req, res) => {
+    const{ uid } = req.query
+    const SELECT_ALL_QUERY = `SELECT * FROM sr_address WHERE uid='${uid}'`
+    connection.query(SELECT_ALL_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.json({
+                data: result
+            })
+        }
+    })
+})
+//#endregion
 app.listen(4000, () => {
     console.log('Le serveur roule sur le port 4000')
 })
