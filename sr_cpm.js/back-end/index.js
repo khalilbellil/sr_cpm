@@ -225,6 +225,19 @@ app.get('/subservices', (req, res) => {
         }
     })
 })
+app.get('/subservices/get', (req, res) => {
+    const{ uid } = req.query
+    const SELECT_QUERY = `SELECT * FROM sr_subservice WHERE uid='${uid}'`
+    connection.query(SELECT_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.json({
+                data: result
+            })
+        }
+    })
+})
 app.get('/address', (req, res) => {
     const{ uid } = req.query
     const SELECT_ALL_QUERY = `SELECT * FROM sr_address WHERE uid='${uid}'`
