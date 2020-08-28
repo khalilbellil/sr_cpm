@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const mysql = require('mysql')
+const nodemailer = require('nodemailer');
 
 const app = express()
 //#region Database Config
@@ -92,6 +93,20 @@ app.get('/clients/add', (req, res) => {
         }
     })
 })
+app.get('/client_phone', (req, res) => {
+    const{ uid_client } = req.query
+    const GET_BY_ID_QUERY = `SELECT * FROM sr_address WHERE uid_client='${uid_client} ORDER BY uid DESC LIMIT 1'`
+    connection.query(GET_BY_ID_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.json({
+                data: result
+            })
+        }
+    })
+})
+
 //#endregion
 
 //#region project
@@ -199,7 +214,7 @@ app.get('/client_history/add', (req, res) => {
 })
 //#endregion
 
-//#region 
+//#region others
 app.get('/services', (req, res) => {
     const SELECT_ALL_QUERY = 'SELECT * FROM sr_service WHERE active="yes"'
     connection.query(SELECT_ALL_QUERY, (err, result) => {
@@ -252,6 +267,35 @@ app.get('/address', (req, res) => {
     })
 })
 //#endregion
+
+//#region NODEMAILER
+let transporter = nodemailer.createTransport({
+    host: 'mail.smtp2go.com', // <= your smtp server here
+    port: 2525, // <= connection port
+    // secure: true, // use SSL or not
+    auth: {
+       user: 'soumissionrenovation.ca', // <= smtp login user
+       pass: 'AVxHxsYk7xhw' // <= smtp login pass
+    }
+ });
+  
+  var mailOptions = {
+    from: 'clients@soumissionrenovation.ca',
+    to: 'khalilbellil.ca@gmail.com',
+    subject: 'Ceci est un test de nodemailer !',
+    text: 'That was easy!'
+  };
+  
+//   transporter.sendMail(mailOptions, function(error, info){
+//     if (error) {
+//       console.log(error);
+//     } else {
+//       console.log('Email sent: ' + info.response);
+//     }
+//   });
+//#endregion
+
 app.listen(4000, () => {
     console.log('Le serveur roule sur le port 4000')
+
 })

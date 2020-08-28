@@ -67,7 +67,12 @@ class Project extends Component
     
     this.setState(actual_state);
   }
-
+  saveAjax(table, uid, one, one_val){
+    fetch(`http://localhost:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
+    .then(response => response.json())
+    .catch(err => console.log(err))
+  }
+  
   getProject = (uid) => {
     fetch('http://localhost:4000/projects/get?uid='+uid)
     .then(response => response.json())
@@ -159,11 +164,6 @@ class Project extends Component
     .then(response => this.setState({ history: response.data[0]}))
     .catch(err => console.log(err))
   }
-  saveAjax(table, uid, one, one_val){
-    fetch(`http://localhost:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
-    .then(response => response.json())
-    .catch(err => console.log(err))
-  }
   hideProject(){
     this.showHideElement("tohide_"+this.state.uid_project);
     var arrow = document.getElementById("hide_"+this.state.uid_project);
@@ -215,7 +215,7 @@ class Project extends Component
           <img width="40px" src={email_logo} alt="Courriel" onClick={() => this.showSendEmail()}></img>
           </Col>
           <Col>
-            <img width="40px" src={call_logo} alt="Appeler" href={"tel:"+this.state.address.phone1}></img>
+            <img width="40px" src={call_logo} alt="Appeler" onClick={() => window.open('tel:'+this.state.address.phone1, "_self")}></img>
           </Col>
           <Col>
             <img width="40px" src={call_back_later_logo} alt="Appeler plus tard" onClick={() => this.callBackLater()}></img>
@@ -326,6 +326,10 @@ class Project extends Component
               <h4 style={{textAlign:"center"}}>Qualification du projet</h4>
               <hr style={{borderTop:"white 1px solid"}} />
               <Form>
+                <FormGroup>
+                  <Label className="mr-4" for={"employee_"+this.state.uid_project}>Employé ?</Label>
+                  <Input type="checkbox" name="employee" id={"employee_"+this.state.uid_project} value={this.state.project.employee} checked={(this.state.project.employee === "yes")?true:false} onChange={(val)=>{(val.target.checked === true)?val.target.value = "yes":val.target.value = "no";this.setStateValue(this.state.project, "project", "employee", val.target.value);this.saveAjax("sr_project",this.state.uid_project,"employee",val.target.value);}}/>
+                </FormGroup>
                 <FormGroup>
                   <Label for="service">Service*</Label>
                   <Input type="select" name="service" value={this.state.project.uid_service} onChange={(val)=>{this.setStateValue(this.state.project, "project", "uid_service", val.target.value);this.saveAjax("sr_project",this.state.uid_project,"uid_service",val.target.value);this.getNewSubServices(val.target.value);}}>
