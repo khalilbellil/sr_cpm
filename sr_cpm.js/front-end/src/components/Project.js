@@ -13,6 +13,18 @@ import flag_for_review_logo from "../img/flag_for_review_logo.png";
 import top_arrow_icon from "../img/top_arrow_icon.png";
 import down_arrow_icon from "../img/down_arrow_icon.png";
 import { format } from 'date-fns';
+import Popup from "reactjs-popup";
+import $ from "jquery";
+
+const Modal = () => (
+  <Popup
+    trigger={<button className="button"> Open Modal </button>}
+    modal
+    closeOnDocumentClick
+  >
+    <span> Modal content </span>
+  </Popup>
+);
 
 class Project extends Component 
 {
@@ -26,7 +38,8 @@ class Project extends Component
             services: [],
             subservices: [],
             address: [],
-            complete_address: ""
+            complete_address: "",
+            service_questions: []
         };
   }
   componentDidMount() {
@@ -99,6 +112,9 @@ class Project extends Component
     fetch('http://localhost:4000/services')
     .then(response => response.json())
     .then(response => this.setStateObjects("services", response.data))
+    .then(()=>{
+      this.getServiceQuestions();
+    })
     .catch(err => alert(err))
   }
   getSubServices(){
@@ -114,6 +130,12 @@ class Project extends Component
       .then(response => this.setStateObjects("subservices", response.data))
       .then(response => {this.setStateValue(this.state.project, "project", "uid_service", uid);document.getElementById("subservice_"+this.state.uid_project).value="0"})
       .catch(err => alert(err))
+  }
+  getServiceQuestions(){
+    fetch('http://localhost:4000/service_questions?uid_service='+this.state.project.uid_service)
+    .then(response => response.json())
+    .then(response => this.setStateObjects("service_questions", response.data))
+    .catch(err => alert(err))
   }
   activateProject(){
     if(this.state.project.status === "new")
@@ -150,12 +172,26 @@ class Project extends Component
     document.getElementById("popupbox_button").innerHTML = _btn_content
     document.getElementById("popupbox_button").onclick = _btn_onclick
   }
-  sendEmail(){
-    alert("test")
+  getCheckedQuestions(){
+    var uid_questions = ""
+    var i = 0;
+    var checkboxes = [];
+    $("input:checkbox[name=question]:checked").each(function(){
+      checkboxes.push(this);
+    });
+    for (var checkbox of checkboxes) {
+        var str = checkbox.id
+        var final_id = str.replace("question_","")
+        uid_questions += final_id
+        if (i !== checkboxes.length - 1 && checkboxes.length !== 1)
+          uid_questions += ","
+        i++
+    }
+    this.sendEmail("clientsProjectQuestions","khalilbellil.ca@gmail.com","fr", uid_questions)
   }
-  showSendEmail(){
-    this.setPopupBox("Envoyer un courriel (#"+ this.state.uid_project +")", "allo", "Envoyer", ()=>this.sendEmail())
-    this.showHideElement("popupbox")
+  sendEmail(name, email, lg, uid_questions){
+    fetch(`http://localhost:4000/nodemailer/sendquestions?name=${name}&email=${email}&lg=${lg}&uid_questions=${uid_questions}&uid_service=${this.state.project.uid_service}`)
+    .catch(err => alert(err))
   }
   addHistory(uid_msg, comments){
     fetch(`http://localhost:4000/client_history/add?uid_msg=${uid_msg}&uid_client=${this.state.project.uid_client}&uid_project=${this.state.uid_project}
@@ -192,17 +228,6 @@ class Project extends Component
     return (
       <Col className="project-panel" id={"project_panel_" + this.state.uid_project} style={{display:"block", borderRadius: "25px", position: "relative", 
       background: "#00517E", border: "6px solid #118bcf", boxSizing: "border-box", boxShadow: "0px 6px 6px rgba(0, 0, 0, 0.35)", paddingTop: "1%", color:"white"}}>
-        
-        {/* Popup Box */}
-        <Row>
-          <Col id="popupbox" style={{zIndex:"101", height:"auto", width:"600px", top:"5px", display:"none"}}>
-            <Card body inverse style={{ backgroundColor: '#17A2B8', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
-              <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Title</CardTitle>
-              <CardText id="popupbox_content">Content</CardText>
-              <Button id="popupbox_button">Button</Button>
-            </Card>
-          </Col>
-        </Row>
 
         <Row className="buttons_panel">
           <Col>
@@ -212,7 +237,29 @@ class Project extends Component
             <img width="40px" src={cancel_logo} alt="Annuler" onClick={() => this.cancelProject()}></img>
           </Col>
           <Col>
-          <img width="40px" src={email_logo} alt="Courriel" onClick={() => this.showSendEmail()}></img>
+            <Popup
+              trigger={<img width="40px" src={email_logo} alt="Courriel"></img>}
+              modal
+              closeOnDocumentClick
+            >
+              <span>
+                <Card body inverse style={{ backgroundColor: '#17A2B8', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
+                  <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Envoyer un courriel avec les questions suivantes:</CardTitle>
+                  <CardText id="popupbox_content">
+                  {
+                    this.state.service_questions.map((sq, i) =>
+                    (
+                      <Col>
+                        <Input type="checkbox" name="question" id={"question_"+sq.uid} onChange={(val)=>{/*val.target.checked*/}}/>
+                        <Label for={"question_"+sq.uid}>{sq.question_fr}</Label>
+                      </Col>
+                    )
+                    )}
+                  </CardText>
+                  <Button id="popupbox_button" onClick={()=>this.getCheckedQuestions()}>Envoyer</Button>
+                </Card>  
+              </span>
+            </Popup>
           </Col>
           <Col>
             <img width="40px" src={call_logo} alt="Appeler" onClick={() => window.open('tel:'+this.state.address.phone1, "_self")}></img>
@@ -469,7 +516,6 @@ class Project extends Component
                       <option value="27">Mascouche</option>
                   </Input>
                 </FormGroup>
-
               </Form>
               <hr style={{borderTop:"white 1px solid"}} />
             </Col>
@@ -481,4 +527,4 @@ class Project extends Component
   }
 }
   
-  export default Project;
+export default Project;

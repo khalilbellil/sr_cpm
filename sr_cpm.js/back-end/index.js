@@ -28,7 +28,7 @@ app.get('/update/one', (req, res) => {
         if(err) {
             return res.send(err)
         } else {
-            return res.send('Update reussi')
+            return res.send('Update réussi')
         }
     })
 })
@@ -39,7 +39,7 @@ app.get('/update/two', (req, res) => {
         if(err) {
             return res.send(err)
         } else {
-            return res.send('Update reussi')
+            return res.send('Update réussi')
         }
     })
 })
@@ -50,7 +50,7 @@ app.get('/update/three', (req, res) => {
         if(err) {
             return res.send(err)
         } else {
-            return res.send('Update reussi')
+            return res.send('Update réussi')
         }
     })
 })
@@ -266,6 +266,19 @@ app.get('/address', (req, res) => {
         }
     })
 })
+app.get('/service_questions', (req, res) => {
+    const{ uid_service } = req.query
+    const SELECT_ALL_QUERY = `SELECT * FROM sr_service_question WHERE uid_service=${uid_service} AND active="yes"`
+    connection.query(SELECT_ALL_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.json({
+                data: result
+            })
+        }
+    })
+})
 //#endregion
 
 //#region NODEMAILER
@@ -278,21 +291,80 @@ let transporter = nodemailer.createTransport({
        pass: 'AVxHxsYk7xhw' // <= smtp login pass
     }
  });
-  
-  var mailOptions = {
-    from: 'clients@soumissionrenovation.ca',
-    to: 'khalilbellil.ca@gmail.com',
-    subject: 'Ceci est un test de nodemailer !',
-    text: 'That was easy!'
-  };
-  
-//   transporter.sendMail(mailOptions, function(error, info){
-//     if (error) {
-//       console.log(error);
-//     } else {
-//       console.log('Email sent: ' + info.response);
-//     }
-//   });
+
+ app.get('/nodemailer/send', (req, res) => {
+    const{ name, email, lg } = req.query
+    const UPDATE_USER_QUERY = `SELECT subject_${lg} as subject, content_${lg} as content FROM sr_email WHERE name='${name}' AND active='yes'`
+    connection.query(UPDATE_USER_QUERY, (err, result) => {
+        if(err) {
+            console.log(err)
+            return res.send(err)
+        } else {
+            var mailOptions = {
+                from: 'clients@soumissionrenovation.ca',
+                to: `${email}`,
+                subject: `${result[0].subject}`,
+                html: `${result[0].content}`
+            };
+                  
+            transporter.sendMail(mailOptions, function(error, info){
+                if (error) {
+                    console.log(error);
+                    return res.send('Erreur lors de l\'envoi du courriel !')
+                } else {
+                    console.log('Resultat de l\'envoie du courriel : ' + info.response);
+                    return res.send('Envoi du courriel réussi');
+                }
+            });
+        }
+    })
+})
+
+app.get('/nodemailer/sendquestions', (req, res) => {
+    const{ name, email, lg, uid_questions, uid_service } = req.query
+    const SELECT_QUESTION_QUERY = `SELECT question_${lg} as question FROM sr_service_question WHERE uid IN(${uid_questions}) AND active='yes'`
+    connection.query(SELECT_QUESTION_QUERY, (err, result) => {
+        if(err) {
+            console.log(err)
+            return res.send(err)
+        } else {
+            const SELECT_SERVICE_QUERY = `SELECT name_${lg} as name FROM sr_service WHERE uid='${uid_service}'`
+            connection.query(SELECT_SERVICE_QUERY, (err, result3) => {
+                if(err) {
+                    console.log(err)
+                    return res.send(err)
+                } else {
+                    const SELECT_EMAIL_QUERY = `SELECT subject_${lg} as subject, content_${lg} as content FROM sr_email WHERE name='${name}' AND active='yes'`
+                    connection.query(SELECT_EMAIL_QUERY, (err, result2) => {
+                        if(err) {
+                            console.log(err)
+                            return res.send(err)
+                        } else {
+                            var content = result2[0].content;
+                            content = content.replace(`::questions::`, `<ul><li>${result[0].question}</li><li>${result[1].question}</li></ul>`);
+                            content = content.replace(`::service::`, `<b>${result3[0].name}</b>`)
+                            var mailOptions = {
+                                from: 'clients@soumissionrenovation.ca',
+                                to: `${email}`,
+                                subject: `${result2[0].subject}`,
+                                html: `${content}`
+                            };
+                            transporter.sendMail(mailOptions, function(error, info){
+                                if (error) {
+                                    console.log(error);
+                                    return res.send('Erreur lors de l\'envoi du courriel !')
+                                } else {
+                                    console.log('Resultat de l\'envoie du courriel : ' + info.response);
+                                    return res.send('Envoi du courriel réussi');
+                                }
+                            });
+                        }
+                    })
+                }
+            })
+        }
+    })
+})
 //#endregion
 
 app.listen(4000, () => {
