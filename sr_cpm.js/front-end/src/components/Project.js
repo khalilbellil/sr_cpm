@@ -15,16 +15,8 @@ import down_arrow_icon from "../img/down_arrow_icon.png";
 import { format } from 'date-fns';
 import Popup from "reactjs-popup";
 import $ from "jquery";
-
-const Modal = () => (
-  <Popup
-    trigger={<button className="button"> Open Modal </button>}
-    modal
-    closeOnDocumentClick
-  >
-    <span> Modal content </span>
-  </Popup>
-);
+import History from "./History"
+import "../styles/cpm.css";
 
 class Project extends Component 
 {
@@ -34,12 +26,12 @@ class Project extends Component
             uid_project: (props.uid_project)?props.uid_project:0,
             username: "Khalil",
             project: [],
-            history: [],
             services: [],
             subservices: [],
             address: [],
             complete_address: "",
-            service_questions: []
+            service_questions: [],
+            popup_open: false
         };
   }
   componentDidMount() {
@@ -138,11 +130,13 @@ class Project extends Component
     .catch(err => alert(err))
   }
   activateProject(){
-    if(this.state.project.status === "new")
+    if(this.state.project.status !== "active")
       fetch('http://localhost:4000/projects/activate?uid='+this.state.uid_project)
       .then(() => {
         console.log("(TODO) automail::projectActivatedClient(uid) or projectActivatedEmpoyee(uid) then automail::projectActivatedAdmin(uid)");
         this.getProject(this.state.uid_project);
+        this.addHistory("8", "")
+        
       })
       .catch(err => console.log(err))
     else
@@ -154,6 +148,7 @@ class Project extends Component
       .then(() => {
         console.log("(TODO) automail::projectCanceled(uid)");
         this.getProject(this.state.uid_project);
+        this.addHistory("7", "")
       })
       .catch(err => console.log(err))
     else
@@ -187,18 +182,23 @@ class Project extends Component
           uid_questions += ","
         i++
     }
-    this.sendEmail("clientsProjectQuestions","khalilbellil.ca@gmail.com","fr", uid_questions)
+    this.sendQuestionsEmail("clientsProjectQuestions","khalilbellil.ca@gmail.com","fr", uid_questions)
   }
-  sendEmail(name, email, lg, uid_questions){
+  sendQuestionsEmail(name, email, lg, uid_questions){
     fetch(`http://localhost:4000/nodemailer/sendquestions?name=${name}&email=${email}&lg=${lg}&uid_questions=${uid_questions}&uid_service=${this.state.project.uid_service}`)
+    .then(() => {
+      this.addHistory("2", "");
+      this.setState({ popup_open: false });
+    })
     .catch(err => alert(err))
   }
   addHistory(uid_msg, comments){
     fetch(`http://localhost:4000/client_history/add?uid_msg=${uid_msg}&uid_client=${this.state.project.uid_client}&uid_project=${this.state.uid_project}
     &username=${this.state.username}&comments=${comments}`)
-    .then(response => response.json())
-    .then(response => this.setState({ history: response.data[0]}))
-    .catch(err => console.log(err))
+    .then(() => {
+      this.props.onReloadHistory(true)
+    })
+    .catch(err => alert(err))
   }
   hideProject(){
     this.showHideElement("tohide_"+this.state.uid_project);
@@ -223,11 +223,62 @@ class Project extends Component
     })
     .catch(err => alert(err))
   }
+  handleDelayChange(){
+    var sdate = new Date();
+    var edate = new Date();
+    var delay_from;
+    var delay_to;
+    var filter = this.state.project.delay_options;
+    if (filter === "1"){
+      edate.setDate(edate.getDate() + 10);
+      delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2)
+      delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2)
+    }else if(filter == 2){
+        edate.setDate(sdate.getDate() + 15);
+        delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
+        delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
+    }else if(filter == 3){
+        sdate.setDate(sdate.getDate() + 0);
+        edate.setDate(edate.getDate() + 30);
+        delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
+        delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
+    }else if(filter == 4){
+        sdate.setDate(sdate.getDate() + 0);
+        edate.setDate(edate.getDate() + 60);
+        delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
+        delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
+    }else if(filter == 5){
+        sdate.setDate(sdate.getDate() + 0);
+        edate.setDate(edate.getDate() + 130);
+        delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
+        delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
+    }else if(filter == 6){
+        sdate.setDate(sdate.getDate() + 180);
+        edate.setDate(edate.getDate() + 365);
+        delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
+        delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
+    }else if(filter == 7){
+        sdate.setDate(sdate.getDate() + 365);
+        edate.setDate(edate.getDate() + 1000)
+        delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
+        delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
+    }else if(filter == 8){
+        edate.setDate(edate.getDate() + 90)
+        delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
+        delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
+    }
+    if (delay_from !== undefined){
+      this.setStateValue(this.state.project, "project", "delay_from", delay_from)
+      this.saveAjax("sr_project",this.state.uid_project,"delay_from",delay_from)
+      this.setStateValue(this.state.project, "project", "delay_to", delay_to)
+      this.saveAjax("sr_project",this.state.uid_project,"delay_to",delay_to)
+    }
+  }
 
   render() {
     return (
       <Col className="project-panel" id={"project_panel_" + this.state.uid_project} style={{display:"block", borderRadius: "25px", position: "relative", 
-      background: "#00517E", border: "6px solid #118bcf", boxSizing: "border-box", boxShadow: "0px 6px 6px rgba(0, 0, 0, 0.35)", paddingTop: "1%", color:"white"}}>
+      background: "#00517E", border: "6px solid #393939", boxSizing: "border-box", boxShadow: "0px 6px 6px rgba(0, 0, 0, 0.35)", paddingTop: "1%", color:"white"}}>
 
         <Row className="buttons_panel">
           <Col>
@@ -237,10 +288,11 @@ class Project extends Component
             <img width="40px" src={cancel_logo} alt="Annuler" onClick={() => this.cancelProject()}></img>
           </Col>
           <Col>
-            <Popup
-              trigger={<img width="40px" src={email_logo} alt="Courriel"></img>}
-              modal
+          <img width="40px" src={email_logo} alt="Courriel" onClick={() => this.setState({ popup_open: true })}></img>
+          <Popup
+              onClose={() => this.setState({ popup_open: false })}
               closeOnDocumentClick
+              open={this.state.popup_open}
             >
               <span>
                 <Card body inverse style={{ backgroundColor: '#17A2B8', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
@@ -256,7 +308,7 @@ class Project extends Component
                     )
                     )}
                   </CardText>
-                  <Button id="popupbox_button" onClick={()=>this.getCheckedQuestions()}>Envoyer</Button>
+                  <Button id="popupbox_button" onClick={()=> {this.getCheckedQuestions()}}>Envoyer</Button>
                 </Card>  
               </span>
             </Popup>
@@ -271,9 +323,6 @@ class Project extends Component
             <img width="40px" src={google_map_logo} alt="Google Map" onClick={() => this.openGoogleMap()}></img>
           </Col>
           <Col>
-            <img width="40px" src={save_logo} alt="Sauvegarder" onClick={() => this.saveProject()}></img>
-          </Col>
-          <Col>
             <img width="40px" src={duplicate_logo} alt="Copier" onClick={() => this.duplicateProject()}></img>
           </Col>
           <Col>
@@ -283,8 +332,8 @@ class Project extends Component
             <img width="40px" id={"hide_"+this.state.uid_project} src={top_arrow_icon} alt="Cacher" onClick={() => this.hideProject()}></img>
           </Col>
         </Row>
-        <Row>
-          <Col className="col-2">
+        <Row className="status_panel">
+          <Col className="col-4">
             <b>Status:</b> <b style={{color:"#F9B233"}}>{this.state.project.status}</b>
           </Col>
           <Col className="col">
@@ -297,6 +346,9 @@ class Project extends Component
         <div id={"tohide_"+this.state.uid_project}>
           <Row>
             <Col>
+              <hr style={{borderTop:"white 1px solid"}} />
+              <h6 style={{textAlign:"center"}}>Description</h6>
+              <hr style={{borderTop:"white 1px solid"}} />
               <Editor
                 initialValue={this.state.project.description}
                         init={{
@@ -320,7 +372,7 @@ class Project extends Component
           <Row>
             <Col>
               <hr style={{borderTop:"white 1px solid"}} />
-              <h4 style={{textAlign:"center"}}>Informations du 2e formulaire</h4>
+              <h6 style={{textAlign:"center"}}>Informations du 2e formulaire</h6>
               <hr style={{borderTop:"white 1px solid"}} />
               <Form>
                 <FormGroup>
@@ -370,7 +422,7 @@ class Project extends Component
             </Col>
             <Col>
               <hr style={{borderTop:"white 1px solid"}} />
-              <h4 style={{textAlign:"center"}}>Qualification du projet</h4>
+              <h6 style={{textAlign:"center"}}>Qualification du projet</h6>
               <hr style={{borderTop:"white 1px solid"}} />
               <Form>
                 <FormGroup>
@@ -458,7 +510,7 @@ class Project extends Component
                 </FormGroup>
                 <FormGroup>
                   <Label for="delay_options">Délais de traitement*</Label>
-                  <Input type="select" name="delay_options" value={this.state.project.delay_options} onChange={(val)=>{this.setStateValue(this.state.project, "project", "delay_options", val.target.value);this.saveAjax("sr_project",this.state.uid_project,"delay_options",val.target.value);}}>
+                  <Input type="select" name="delay_options" value={this.state.project.delay_options} onChange={(val)=>{this.setStateValue(this.state.project, "project", "delay_options", val.target.value);this.saveAjax("sr_project",this.state.uid_project,"delay_options",val.target.value);this.handleDelayChange()}}>
                     <option value='0'>Choisir un filtre</option>
                     <option value='1'>D'ici à une semaine/Urgent</option>
                     <option value='2'>Dans 1 à 2 semaines</option>
@@ -473,11 +525,11 @@ class Project extends Component
                 <FormGroup className="row">
                   <Col>
                       <Label for="delay_from">Début</Label>
-                      <Input type="date" name="delay_from" value={this.state.project.delay_from} onChange={(val)=>{this.setStateValue(this.state.project, "project", "delay_from", val.target.value);this.saveAjax("sr_project",this.state.uid_project,"delay_from",val.target.value);}}/>
+                      <Input type="date" name="delay_from" value={this.state.project.delay_from} disabled onChange={(val)=>{this.setStateValue(this.state.project, "project", "delay_from", val.target.value);this.saveAjax("sr_project",this.state.uid_project,"delay_from",val.target.value);}}/>
                   </Col>
                   <Col>
-                      <Label for="delay_to">Début</Label>
-                      <Input type="date" name="delay_to" value={this.state.project.delay_to} onChange={(val)=>{this.setStateValue(this.state.project, "project", "delay_to", val.target.value);this.saveAjax("sr_project",this.state.uid_project,"delay_to",val.target.value);}}/>
+                      <Label for="delay_to">Fin</Label>
+                      <Input type="date" name="delay_to" value={this.state.project.delay_to} disabled onChange={(val)=>{this.setStateValue(this.state.project, "project", "delay_to", val.target.value);this.saveAjax("sr_project",this.state.uid_project,"delay_to",val.target.value);}}/>
                   </Col>
                 </FormGroup>
                 <FormGroup className="row">

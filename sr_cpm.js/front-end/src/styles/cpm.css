@@ -11,12 +11,18 @@
     padding-right:1%;
 }
 .buttons_panel img{
-    border: 3px solid #118BCF;
-    border-radius: 25px;
+    border: 3px solid #393939;
+    border-radius: 50px;
 }
-
 .buttons_panel img:hover{
-    border: 3px solid #F9B233;
-    border-radius: 25px;
+    border: 6px solid #F9B233;
+    border-radius: 35px;
 }
-
+.cpm_btns .sr-btn:hover{
+    background-color: #393939!important;
+    color:#F9B233!important
+}
+.cpm_btns .sr-btn:active{
+    background-color: #F9B233!important;
+    color:#393939!important
+}

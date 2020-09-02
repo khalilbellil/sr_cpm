@@ -10,6 +10,10 @@ const connection = mysql.createConnection({
     user: 'root',
     password: 'Kookie&09',
     database: 'sr_test'
+    // host: 'soumissionrenovation.ca',
+    // user: 'khalilbellil',
+    // password: 'NPVVTsDdPwf7TTzfWAQj3QNBvsZ478oxuu4M3cB2j7xLDq7HBw',
+    // database: 'srv1'
 })
 //#endregion
 connection.connect(err => {
@@ -203,9 +207,10 @@ app.get('/client_history/get_by_client', (req, res) => {
 })
 app.get('/client_history/add', (req, res) => {
     const{ uid_msg, uid_client, uid_project, username, comments } = req.query
-    const INSERT_USER_QUERY = `INSERT INTO sr_followup(uid_msg, uid_client, uid_project, followup_agent, comments) VALUES(0, 0, '${uid_msg}', '${uid_client}', '${uid_project}', '${username}', '${comments}')`
+    const INSERT_USER_QUERY = `INSERT INTO sr_followup(sn_cdate, msg_uid, uid_client, uid_project, followup_agent, comments) VALUES(NOW(), '${uid_msg}', '${uid_client}', '${uid_project}', '${username}', '${comments}')`
     connection.query(INSERT_USER_QUERY, (err, result) => {
         if(err) {
+            console.log(err);
             return res.send(err)
         } else {
             return res.send('Historique ajouté avec succes')
@@ -341,7 +346,11 @@ app.get('/nodemailer/sendquestions', (req, res) => {
                             return res.send(err)
                         } else {
                             var content = result2[0].content;
-                            content = content.replace(`::questions::`, `<ul><li>${result[0].question}</li><li>${result[1].question}</li></ul>`);
+                            var questions = "";
+                            result.forEach(element => {
+                                questions += `<li>${element.question}</li>`
+                            });
+                            content = content.replace(`::questions::`, `<ul>`+questions+`</ul>`)
                             content = content.replace(`::service::`, `<b>${result3[0].name}</b>`)
                             var mailOptions = {
                                 from: 'clients@soumissionrenovation.ca',
@@ -369,5 +378,4 @@ app.get('/nodemailer/sendquestions', (req, res) => {
 
 app.listen(4000, () => {
     console.log('Le serveur roule sur le port 4000')
-
 })

@@ -65,7 +65,7 @@ class Client extends Component {
       return (
             <Row className="client-panel-fix" id="client-panel" style={{fontSize:"14px",paddingLeft:"1%",paddingRight:"1%", color:"white"}}>
                 <Col className="sr_space_box client-panel-hidethis pt-1 pb-2" style={{display:"block", borderRadius: "25px", position: "relative", 
-                        background: "#00517E", border: "6px solid #118bcf", boxSizing: "border-box", boxShadow: "0px 6px 6px rgba(0, 0, 0, 0.35)", padding:"3%"}}>
+                        background: "#00517E", border: "6px solid #393939", boxSizing: "border-box", boxShadow: "0px 6px 6px rgba(0, 0, 0, 0.35)", padding:"3%"}}>
                     <Row>
                         <Label className="col-3" for="i_client_firstname">Firstname* :</Label>
                         <Label className="col-3" for="i_client_lastname">Lastname :</Label>
