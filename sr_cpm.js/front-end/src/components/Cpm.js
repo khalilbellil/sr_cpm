@@ -3,8 +3,6 @@ import { Row, Input, Col } from 'reactstrap';
 import Client from './Client';
 import Project from './Project';
 import History from './History';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import "../styles/cpm.css";
 import down_arrow_icon from "../img/right-arrow.png";
 

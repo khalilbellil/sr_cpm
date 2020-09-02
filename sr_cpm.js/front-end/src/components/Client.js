@@ -23,6 +23,9 @@ class Client extends Component {
             case "client":
               this.setState({client:actual_object})
               break;
+            
+            default:
+            break;
           }
         }
     }

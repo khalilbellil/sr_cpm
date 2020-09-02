@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 import { Row, Col, Table } from 'reactstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import "../styles/cpm.css";
 import { format } from 'date-fns';
 import top_arrow_icon from "../img/left-arrow.png";

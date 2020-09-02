@@ -7,7 +7,6 @@ import call_back_later_logo from "../img/call_back_later_logo.png";
 import activate_logo from "../img/activate_logo.png";
 import cancel_logo from "../img/cancel_logo.png";
 import email_logo from "../img/email_logo.png";
-import save_logo from "../img/save_logo.png";
 import duplicate_logo from "../img/duplicate_logo.png";
 import flag_for_review_logo from "../img/flag_for_review_logo.png";
 import top_arrow_icon from "../img/top_arrow_icon.png";
@@ -15,7 +14,6 @@ import down_arrow_icon from "../img/down_arrow_icon.png";
 import { format } from 'date-fns';
 import Popup from "reactjs-popup";
 import $ from "jquery";
-import History from "./History"
 import "../styles/cpm.css";
 
 class Project extends Component 
@@ -31,7 +29,9 @@ class Project extends Component
             address: [],
             complete_address: "",
             service_questions: [],
-            popup_open: false
+            popup_open: false,
+            popup_open2: false,
+            callbacklater:[]
         };
   }
   componentDidMount() {
@@ -52,6 +52,9 @@ class Project extends Component
   
         case "history":
           this.setState({history:actual_object})
+          break;
+        
+        default:
           break;
       }
     }
@@ -89,6 +92,7 @@ class Project extends Component
       this.state.project.delay_from = format(new Date(this.state.project.delay_from), 'yyyy-MM-dd')
       this.state.project.delay_to = format(new Date(this.state.project.delay_to), 'yyyy-MM-dd')
     })
+    .then(() => this.getCallBackLater())
     .catch(err => alert(err))
   }
   getAddress(){
@@ -274,6 +278,30 @@ class Project extends Component
       this.saveAjax("sr_project",this.state.uid_project,"delay_to",delay_to)
     }
   }
+  callBackLater(){
+    if(this.state.callbacklater === undefined){
+      var date_callbacklater = document.getElementById("date_callbacklater").value;
+      var time_callbacklater = document.getElementById("time_callbacklater").value;
+      var comment_callbacklater = document.getElementById("comment_callbacklater").value;
+      var call_back_date = date_callbacklater + " " + time_callbacklater + ":00";
+      fetch(`http://localhost:4000/callbacklater/add?uid_project=${this.state.uid_project}&uid_client=${this.state.project.uid_client}&call_back_date=${call_back_date}&followup_agent=${this.state.username}&comments=${comment_callbacklater}`)
+      .then(() => {
+        this.addHistory("3", "")
+        this.setState({ popup_open2: false })
+      })
+      .catch(err => alert(err))
+    }else{
+      alert("Deja defini !")
+    }
+  }
+  getCallBackLater(){
+    fetch(`http://localhost:4000/callbacklater/get?uid_project=${this.state.uid_project}`)
+    .then(response => response.json())
+    .then(response => {
+      this.setStateObject("callbacklater", response.data[0])
+    })
+    .catch(err => alert(err))
+  }
 
   render() {
     return (
@@ -295,7 +323,7 @@ class Project extends Component
               open={this.state.popup_open}
             >
               <span>
-                <Card body inverse style={{ backgroundColor: '#17A2B8', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
+                <Card body inverse style={{ backgroundColor: '#393939', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
                   <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Envoyer un courriel avec les questions suivantes:</CardTitle>
                   <CardText id="popupbox_content">
                   {
@@ -317,7 +345,27 @@ class Project extends Component
             <img width="40px" src={call_logo} alt="Appeler" onClick={() => window.open('tel:'+this.state.address.phone1, "_self")}></img>
           </Col>
           <Col>
-            <img width="40px" src={call_back_later_logo} alt="Appeler plus tard" onClick={() => this.callBackLater()}></img>
+            <img width="40px" src={call_back_later_logo} alt="Appeler plus tard" onClick={() => this.setState({ popup_open2: true })}></img>
+            <Popup
+              onClose={() => this.setState({ popup_open2: false })}
+              closeOnDocumentClick
+              open={this.state.popup_open2}
+            >
+              <span>
+                <Card body inverse style={{ backgroundColor: '#393939', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
+                  <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Rappeler plus tard:</CardTitle>
+                  <i>Note: Le projet sera remit dans les nouveaux clients 5 min avant l'heure de rappel.</i>
+                  <Label for="date_callbacklater">Date:</Label>
+                  <Input type="date" id="date_callbacklater" />
+                  <Label for="time_callbacklater">Heure:</Label>
+                  <Input type="time" id="time_callbacklater" />
+                  <Label for="comment_callbacklater">Commentaire / Raison:</Label>
+                  <Input type="textarea" id="comment_callbacklater" />
+                  <br/>
+                  <Button id="popupbox_button" onClick={()=> {this.callBackLater()}}>Confirmer</Button>
+                </Card>
+              </span>
+            </Popup>
           </Col>
           <Col>
             <img width="40px" src={google_map_logo} alt="Google Map" onClick={() => this.openGoogleMap()}></img>
