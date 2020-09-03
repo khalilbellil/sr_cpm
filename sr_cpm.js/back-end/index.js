@@ -289,10 +289,9 @@ app.get('/callbacklater/add', (req, res) => {
     const INSERT_CALLBACKLATER_QUERY = `INSERT INTO sr_call_back_later(uid_project, uid_client, call_back_date, followup_agent, comments) VALUES('${uid_project}', '${uid_client}', '${call_back_date}', '${followup_agent}', '${comments}')`
     connection.query(INSERT_CALLBACKLATER_QUERY, (err, result) => {
         if(err) {
-            console.log("INSERT CALLBACKLATER ECHEC !")
+            console.log(err)
             return res.send(err)
         } else {
-            console.log("INSERT CALLBACKLATER SUCCESS")
             return res.send("INSERT SUCCESS")
         }
     })
@@ -301,6 +300,44 @@ app.get('/callbacklater/get', (req, res) => {
     const{ uid_project } = req.query
     const GET_QUERY = `SELECT * FROM sr_call_back_later WHERE uid_project='${uid_project} LIMIT 1'`
     connection.query(GET_QUERY, (err, result) => {
+        if(err) {
+            console.log("err: "+err)
+            return res.send(err)
+        } else {
+            return res.json({
+                data: result
+            })
+        }
+    })
+})
+app.get('/callbacklater/update', (req, res) => {
+    const{ uid_project, uid_client, call_back_date, followup_agent, comments } = req.query
+    const UPDATE_QUERY = `UPDATE sr_call_back_later SET uid_client='${uid_client}', call_back_date='${call_back_date}', followup_agent='${followup_agent}', comments='${comments}', done='no' WHERE uid_project='${uid_project}'`
+    connection.query(UPDATE_QUERY, (err, result) => {
+        if(err) {
+            console.log("err: "+err)
+            return res.send(err)
+        } else {
+            return res.send("UPDATE SUCCESS")
+        }
+    })
+})
+app.get('/flagforreview/update', (req, res) => {
+    const{ uid_project, followup_agent } = req.query
+    const UPDATE_QUERY = `UPDATE sr_project SET flaged_for_review_by='${followup_agent}', flag_for_review=1 WHERE uid='${uid_project}'`
+    connection.query(UPDATE_QUERY, (err, result) => {
+        if(err) {
+            console.log("err: "+err)
+            return res.send(err)
+        } else {
+            return res.send("UPDATE SUCCESS")
+        }
+    })
+})
+app.get('/flagforreview/get', (req, res) => {
+    const{ uid_project } = req.query
+    const UPDATE_QUERY = `SELECT flag_for_review FROM sr_project WHERE uid='${uid_project}'`
+    connection.query(UPDATE_QUERY, (err, result) => {
         if(err) {
             console.log("err: "+err)
             return res.send(err)
