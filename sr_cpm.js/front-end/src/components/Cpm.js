@@ -19,6 +19,7 @@ class Cpm extends Component {
   
   componentDidMount() {
     this.setState({reload_history: true})
+    this.getClientProjectsUids()
   }
 
   setStateValue(actual_object, object_name, variable, value){
@@ -27,6 +28,9 @@ class Cpm extends Component {
       switch (object_name) {
         case "history":
           this.setState({history:actual_object})
+          break;
+          
+        default:
           break;
       }
     }
@@ -59,9 +63,21 @@ class Cpm extends Component {
     else
       element.style.display = "none"
   }
+
   hidePanel(){
     this.showHideElement("tohide_history");
     this.showHideElement("toshow_history");
+  }
+  getClientProjectsUids(){
+    fetch('http://localhost:4000/client/get_projects?uid_client='+this.state.uid_client)
+    .then(response => response.json())
+    .then(response => this.setStateObjects("uids_projects", response.data))
+    .catch(err => alert(err))
+  }
+  createProject(){
+    fetch('http://localhost:4000/projects/new?uid_client='+this.state.uid_client)
+    .then(() => {window.location.reload()})
+    .catch(err => alert(err))
   }
 
   handleHistoryChange = (value) =>{
@@ -89,17 +105,24 @@ class Cpm extends Component {
             
             <Row style={{paddingLeft:"1%",paddingRight:"1%",paddingTop:"1%"}} className="cpm_btns">
                 <Input className="col btn sr-btn" type="button" id="b_client_uid" value={"Client #"+this.state.uid_client}
-                    style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}}
-                />
-                <div className="col-8"></div>
-                <Input className="col-2 btn sr-btn" type="button" onclick="" value="Next Client" 
-                    style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}}
-                />
+                    style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}}/>
+                <div className="col-1"></div>
+                <Input className="col-2 btn sr-btn" type="button" value="Nouveau projet" onClick={() => this.createProject()} 
+                style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}} />
+                <div className="col-5"></div>
+                <Input className="col-2 btn sr-btn" type="button" onClick="" value="Next Client" 
+                    style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}}/>
             </Row>
             <br />
-            <Row style={{paddingLeft:"1%", paddingRight:"1%", paddingBottom:"3%"}}>
-              <Project uid_project="206763" onReloadHistory={this.handleHistoryChange}/>
-            </Row>
+            {
+              this.state.uids_projects.map((p, i) =>
+              (
+                <Row style={{paddingLeft:"1%", paddingRight:"1%", paddingBottom:"3%"}}>
+                  <Project uid_project={p.uid} onReloadHistory={this.handleHistoryChange}/>
+                </Row>
+              )
+            )}
+            
         </Col>
       </Row>
     );

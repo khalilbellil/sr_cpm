@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.4",
+    "date-fns": "^2.16.1",
     "express": "^4.16.2",
     "mailgun-js": "^0.22.0",
     "mysql": "^2.15.0",

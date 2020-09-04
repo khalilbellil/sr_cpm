@@ -55,7 +55,7 @@ class Client extends Component {
         .then(response => response.json())
         .then(response => this.setState({ client: response.data[0]}))
         .then(()=>this.getPhone())
-        .catch(err => console.log(err))
+        .catch(err => alert(err))
     }
     getPhone(){
         fetch('http://localhost:4000/client_phone?uid_client='+this.state.uid_client)

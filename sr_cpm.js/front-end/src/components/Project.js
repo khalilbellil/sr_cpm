@@ -23,7 +23,6 @@ class Project extends Component
         super(props);
         this.state = {
             uid_project: (props.uid_project)?props.uid_project:0,
-            email: (props.email)?props.email:"khalilbellil.ca@gmail.com",
             username: "Khalil",
             uid_user: 335,
             project: [],
@@ -106,8 +105,8 @@ class Project extends Component
     .then(() => {this.getSubServices()})
     .then(() => {this.getAddress()})
     .then(() => {
-      this.state.project.delay_from = format(new Date(this.state.project.delay_from), 'yyyy-MM-dd')
-      this.state.project.delay_to = format(new Date(this.state.project.delay_to), 'yyyy-MM-dd')
+      this.setStateValue(this.state.project, "project", "delay_from", format(new Date(this.state.project.delay_from), 'yyyy-MM-dd'))
+      this.setStateValue(this.state.project, "project", "delay_to", format(new Date(this.state.project.delay_to), 'yyyy-MM-dd'))
     })
     .then(() => this.getCallBackLater())
     .then(() => this.getFlagForReview())
@@ -173,7 +172,7 @@ class Project extends Component
   }
   cancelProject(){
     if(this.state.project.status !== "cancelled-before-qualification" && this.state.project.status !== "cancelled-after-qualification")
-      fetch(`http://localhost:4000/projects/cancel?uid=${this.state.uid_project}&status=${this.state.project.status}&uid_cancel_reason=${this.state.uid_cancel_reason}
+      fetch(`http://localhost:4000/projects/cancel?uid=${this.state.uid_project}&status=${this.state.project.status}&uid_cancel_reason=${(this.state.uid_cancel_reason === undefined)?"0":this.state.uid_cancel_reason}
       &message=${this.state.message_cancel_reason}&uid_client=${this.state.project.uid_client}&uid_user=${this.state.uid_user}`)
       .then(() => {
         console.log("(TODO) automail::projectCanceled(uid)");
@@ -259,36 +258,36 @@ class Project extends Component
       edate.setDate(edate.getDate() + 10);
       delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2)
       delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2)
-    }else if(filter == 2){
+    }else if(filter === 2){
         edate.setDate(sdate.getDate() + 15);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter == 3){
+    }else if(filter === 3){
         sdate.setDate(sdate.getDate() + 0);
         edate.setDate(edate.getDate() + 30);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter == 4){
+    }else if(filter === 4){
         sdate.setDate(sdate.getDate() + 0);
         edate.setDate(edate.getDate() + 60);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter == 5){
+    }else if(filter === 5){
         sdate.setDate(sdate.getDate() + 0);
         edate.setDate(edate.getDate() + 130);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter == 6){
+    }else if(filter === 6){
         sdate.setDate(sdate.getDate() + 180);
         edate.setDate(edate.getDate() + 365);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter == 7){
+    }else if(filter === 7){
         sdate.setDate(sdate.getDate() + 365);
         edate.setDate(edate.getDate() + 1000)
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter == 8){
+    }else if(filter === 8){
         edate.setDate(edate.getDate() + 90)
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
@@ -349,6 +348,11 @@ class Project extends Component
   }
   openGoogleMap(){
     window.open("https://www.google.com/maps/place/"+this.state.complete_address, '_blank');
+  }
+  duplicateProject(){
+    fetch('http://localhost:4000/projects/duplicate?uid='+this.state.project.uid)
+    .then(() => {window.location.reload()})
+    .catch(err => alert(err))
   }
 //#endregion
 
@@ -507,7 +511,7 @@ class Project extends Component
           </Popup>
           </Col>
           <Col>
-            <img width="40px" id={"hide_"+this.state.uid_project} src={top_arrow_icon} alt="Cacher" onClick={() => this.hideProject()}></img>
+            <img width="40px" id={"hide_"+this.state.uid_project} src={down_arrow_icon} alt="Cacher" onClick={() => this.hideProject()}></img>
           </Col>
         </Row>
         <Row className="status_panel">
@@ -520,7 +524,7 @@ class Project extends Component
             <b style={{color:"#F9B233"}}>#{this.state.uid_project}</b>
           </Col>
         </Row>
-        <div id={"tohide_"+this.state.uid_project}>
+        <div id={"tohide_"+this.state.uid_project} style={{display:"none"}}>
           <Row>
             <Col>
               <hr style={{borderTop:"white 1px solid"}} />
@@ -537,9 +541,7 @@ class Project extends Component
                             'insertdatetime media table paste code help wordcount'
                           ],
                           toolbar:
-                            'undo redo | formatselect | bold italic backcolor | \
-                            alignleft aligncenter alignright alignjustify | \
-                            bullist numlist outdent indent | removeformat | help'
+                            'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
                         }}
                 onEditorChange={this.handleEditorChange}
               />
