@@ -175,14 +175,88 @@ app.get('/projects/activate', (req, res) => {
     })
 })
 app.get('/projects/cancel', (req, res) => {
-    let{ uid, status } = req.query
-    status = (status === "new")?"cancelled-before-qualification":"cancelled-after-qualification"
-    const UPDATE_USER_QUERY = `UPDATE sr_project SET status='${status}' WHERE uid='${uid}'`
-    connection.query(UPDATE_USER_QUERY, (err, result) => {
+    let{ uid, status, uid_cancel_reason, message, uid_client, uid_user } = req.query
+    const INSERT_USER_QUERY = `INSERT INTO sr_cancel_reason_result(uid_project, uid_cancel_reason, rmessage, uid_client, uid_user) VALUES
+    ('${uid}', '${uid_cancel_reason}', '${message}', '${uid_client}', '${uid_user}')`
+    connection.query(INSERT_USER_QUERY, (err, result1) => {
+        if(err) {
+            console.log(err)
+            return res.send(err)
+        } else {
+            status = (status === "new")?"cancelled-before-qualification":"cancelled-after-qualification"
+            const UPDATE_USER_QUERY = `UPDATE sr_project SET status='${status}' WHERE uid='${uid}'`
+            connection.query(UPDATE_USER_QUERY, (err, result2) => {
+                if(err) {
+                    console.log(err)
+                    return res.send(err)
+                } else {
+                    const GET_EMAILNAME_QUERY = `SELECT email_code FROM sr_cancel_reason WHERE uid='${uid_cancel_reason}'`
+                    connection.query(GET_EMAILNAME_QUERY, (err, result_emailcode) => {
+                        if(err) {
+                            console.log(err)
+                            return res.send(err)
+                        } else {
+                            const GET_EMAIL_QUERY = `SELECT * FROM sr_email WHERE name='${result_emailcode[0].email_code}'`
+                            connection.query(GET_EMAIL_QUERY, (err, result_email) => {
+                                if(err) {
+                                    console.log(err)
+                                    return res.send(err)
+                                } else {
+                                    const GET_EMAIL_QUERY = `SELECT gender, lastname, firstname, lang, email FROM sr_client WHERE uid='${uid_client}'`
+                                    connection.query(GET_EMAIL_QUERY, (err, result_client) => {
+                                        if(err) {
+                                            console.log(err)
+                                            return res.send(err)
+                                        } else {
+                                            var content = result_email[0].content_fr;
+                                            var title = "Mr."
+                                            var name = result_client[0].lastname;
+                                            if (result_client[0].gender === "f"){
+                                                title = "Ms."
+                                            }
+                                            if (name === undefined){
+                                                name = result_client[0].firstname;
+                                                title = ""
+                                            }
+                                            content = content.replace(`::titre::`, `${title}`)
+                                            content = content.replace(`::nom::`, `${name}`)
+                                            content = content.replace(`::uid_client::`, `${uid_client}`)
+                                            var mailOptions = {
+                                                from: 'clients@soumissionrenovation.ca',
+                                                to: `${result_client[0].email}`,
+                                                subject: `${result_email[0].subject_fr}`,
+                                                html: `${content}`
+                                            };
+                                                
+                                            transporter.sendMail(mailOptions, function(error, info){
+                                                if (error) {
+                                                    console.log(error);
+                                                    return res.send('Erreur lors de l\'envoi du courriel !')
+                                                } else {
+                                                    console.log('Resultat de l\'envoie du courriel : ' + info.response);
+                                                    return res.send('Envoi du courriel réussi');
+                                                }
+                                            });
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+        }
+    })
+})
+app.get('/projects/get_cancel_reasons', (req, res) => {
+    const GET_QUERY = `SELECT * FROM sr_cancel_reason`
+    connection.query(GET_QUERY, (err, result) => {
         if(err) {
             return res.send(err)
         } else {
-            return res.send('Projet activé avec succes')
+            return res.json({
+                data: result
+            })
         }
     })
 })
@@ -361,7 +435,7 @@ let transporter = nodemailer.createTransport({
     }
  });
 
- app.get('/nodemailer/send', (req, res) => {
+app.get('/nodemailer/send', (req, res) => {
     const{ name, email, lg } = req.query
     const UPDATE_USER_QUERY = `SELECT subject_${lg} as subject, content_${lg} as content FROM sr_email WHERE name='${name}' AND active='yes'`
     connection.query(UPDATE_USER_QUERY, (err, result) => {
@@ -388,49 +462,56 @@ let transporter = nodemailer.createTransport({
         }
     })
 })
-
 app.get('/nodemailer/sendquestions', (req, res) => {
-    const{ name, email, lg, uid_questions, uid_service } = req.query
-    const SELECT_QUESTION_QUERY = `SELECT question_${lg} as question FROM sr_service_question WHERE uid IN(${uid_questions}) AND active='yes'`
-    connection.query(SELECT_QUESTION_QUERY, (err, result) => {
+    const{ uid_questions, uid_service, message, uid_client, name } = req.query
+    const GET_EMAIL_QUERY = `SELECT gender, lastname, firstname, lang, email FROM sr_client WHERE uid='${uid_client}'`
+    connection.query(GET_EMAIL_QUERY, (err, result_client) => {
         if(err) {
             console.log(err)
             return res.send(err)
         } else {
-            const SELECT_SERVICE_QUERY = `SELECT name_${lg} as name FROM sr_service WHERE uid='${uid_service}'`
-            connection.query(SELECT_SERVICE_QUERY, (err, result3) => {
+            const SELECT_QUESTION_QUERY = `SELECT question_${result_client[0].lang} as question FROM sr_service_question WHERE uid IN(${uid_questions}) AND active='yes'`
+            connection.query(SELECT_QUESTION_QUERY, (err, result) => {
                 if(err) {
                     console.log(err)
                     return res.send(err)
                 } else {
-                    const SELECT_EMAIL_QUERY = `SELECT subject_${lg} as subject, content_${lg} as content FROM sr_email WHERE name='${name}' AND active='yes'`
-                    connection.query(SELECT_EMAIL_QUERY, (err, result2) => {
+                    const SELECT_SERVICE_QUERY = `SELECT name_${result_client[0].lang} as name FROM sr_service WHERE uid='${uid_service}'`
+                    connection.query(SELECT_SERVICE_QUERY, (err, result3) => {
                         if(err) {
                             console.log(err)
                             return res.send(err)
                         } else {
-                            var content = result2[0].content;
-                            var questions = "";
-                            result.forEach(element => {
-                                questions += `<li>${element.question}</li>`
-                            });
-                            content = content.replace(`::questions::`, `<ul>`+questions+`</ul>`)
-                            content = content.replace(`::service::`, `<b>${result3[0].name}</b>`)
-                            var mailOptions = {
-                                from: 'clients@soumissionrenovation.ca',
-                                to: `${email}`,
-                                subject: `${result2[0].subject}`,
-                                html: `${content}`
-                            };
-                            transporter.sendMail(mailOptions, function(error, info){
-                                if (error) {
-                                    console.log(error);
-                                    return res.send('Erreur lors de l\'envoi du courriel !')
+                            const SELECT_EMAIL_QUERY = `SELECT subject_${result_client[0].lang} as subject, content_${result_client[0].lang} as content FROM sr_email WHERE name='${name}' AND active='yes'`
+                            connection.query(SELECT_EMAIL_QUERY, (err, result2) => {
+                                if(err) {
+                                    console.log(err)
+                                    return res.send(err)
                                 } else {
-                                    console.log('Resultat de l\'envoie du courriel : ' + info.response);
-                                    return res.send('Envoi du courriel réussi');
+                                    var content = result2[0].content;
+                                    var questions = "";
+                                    result.forEach(element => {
+                                        questions += `<li>${element.question}</li>`
+                                    });
+                                    content = content.replace(`::questions::`, `<ul>${questions}<li>${message}</li></ul>`)
+                                    content = content.replace(`::service::`, `<b>${result3[0].name}</b>`)
+                                    var mailOptions = {
+                                        from: 'clients@soumissionrenovation.ca',
+                                        to: `${result_client[0].email}`,
+                                        subject: `${result2[0].subject}`,
+                                        html: `${content}`
+                                    };
+                                    transporter.sendMail(mailOptions, function(error, info){
+                                        if (error) {
+                                            console.log(error);
+                                            return res.send('Erreur lors de l\'envoi du courriel !')
+                                        } else {
+                                            console.log('Resultat de l\'envoie du courriel : ' + info.response);
+                                            return res.send('Envoi du courriel réussi');
+                                        }
+                                    });
                                 }
-                            });
+                            })
                         }
                     })
                 }

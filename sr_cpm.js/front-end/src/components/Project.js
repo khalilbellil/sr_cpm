@@ -23,7 +23,9 @@ class Project extends Component
         super(props);
         this.state = {
             uid_project: (props.uid_project)?props.uid_project:0,
+            email: (props.email)?props.email:"khalilbellil.ca@gmail.com",
             username: "Khalil",
+            uid_user: 335,
             project: [],
             services: [],
             subservices: [],
@@ -34,13 +36,17 @@ class Project extends Component
             popup_open_call_back_later: false,
             popup_open_flag_for_review: false,
             callbacklater:[],
-            flagforreview:""
+            flagforreview:"",
+            uid_cancel_reason: undefined,
+            message_cancel_reason: undefined,
+            cancel_reasons: [],
+            message_question: ""
         };
   }
   componentDidMount() {
     this.getProject(this.state.uid_project);
   }
-  
+//#region FUNCTIONS
   setStateValue(actual_object, object_name, variable, value){
     if (actual_object !== undefined){
       actual_object[variable] = value
@@ -56,7 +62,15 @@ class Project extends Component
         case "history":
           this.setState({history:actual_object})
           break;
-        
+
+        case "cancel_reasons":
+          this.setState({cancel_reasons:actual_object})
+          break;
+
+        case "callbacklater":
+          this.setState({callbacklater:actual_object})
+          break;
+          
         default:
           break;
       }
@@ -97,6 +111,7 @@ class Project extends Component
     })
     .then(() => this.getCallBackLater())
     .then(() => this.getFlagForReview())
+    .then(() => this.getCancelReasons())
     .catch(err => alert(err))
   }
   getAddress(){
@@ -137,6 +152,12 @@ class Project extends Component
     .then(response => this.setStateObjects("service_questions", response.data))
     .catch(err => alert(err))
   }
+  getCancelReasons(){
+    fetch('http://localhost:4000/projects/get_cancel_reasons')
+    .then(response => response.json())
+    .then(response => this.setStateObjects("cancel_reasons", response.data))
+    .catch(err => alert(err))
+  }
   activateProject(){
     if(this.state.project.status !== "active")
       fetch('http://localhost:4000/projects/activate?uid='+this.state.uid_project)
@@ -152,16 +173,17 @@ class Project extends Component
   }
   cancelProject(){
     if(this.state.project.status !== "cancelled-before-qualification" && this.state.project.status !== "cancelled-after-qualification")
-      fetch('http://localhost:4000/projects/cancel?uid='+this.state.uid_project + '&status='+this.state.project.status)
+      fetch(`http://localhost:4000/projects/cancel?uid=${this.state.uid_project}&status=${this.state.project.status}&uid_cancel_reason=${this.state.uid_cancel_reason}
+      &message=${this.state.message_cancel_reason}&uid_client=${this.state.project.uid_client}&uid_user=${this.state.uid_user}`)
       .then(() => {
         console.log("(TODO) automail::projectCanceled(uid)");
         this.getProject(this.state.uid_project);
         this.addHistory("7", "")
         this.setState({ popup_open_cancel: false })
       })
-      .catch(err => console.log(err))
+      .catch(err => alert(err))
     else
-      alert("Project already canceled !")
+      alert("Projet déjà annulé !")
   }
   showHideElement(uid_element){
     var element = document.getElementById(uid_element)
@@ -185,10 +207,11 @@ class Project extends Component
           uid_questions += ","
         i++
     }
-    this.sendQuestionsEmail("clientsProjectQuestions","khalilbellil.ca@gmail.com","fr", uid_questions)
+    this.sendQuestionsEmail("clientsProjectQuestions", uid_questions)
   }
-  sendQuestionsEmail(name, email, lg, uid_questions){
-    fetch(`http://localhost:4000/nodemailer/sendquestions?name=${name}&email=${email}&lg=${lg}&uid_questions=${uid_questions}&uid_service=${this.state.project.uid_service}`)
+  sendQuestionsEmail(name, uid_questions){
+    fetch(`http://localhost:4000/nodemailer/sendquestions?uid_client=${this.state.project.uid_client}&uid_questions=${uid_questions}&uid_service=${this.state.project.uid_service}
+    &message=${this.state.message_question}&name=${name}`)
     .then(() => {
       this.addHistory("2", "");
       this.setState({ popup_open_send_questions: false });
@@ -324,12 +347,15 @@ class Project extends Component
     })
     .catch(err => alert(err))
   }
+  openGoogleMap(){
+    window.open("https://www.google.com/maps/place/"+this.state.complete_address, '_blank');
+  }
+//#endregion
 
   render() {
     return (
       <Col className="project-panel" id={"project_panel_" + this.state.uid_project} style={{display:"block", borderRadius: "25px", position: "relative", 
       background: "#00517E", border: "6px solid #393939", boxSizing: "border-box", boxShadow: "0px 6px 6px rgba(0, 0, 0, 0.35)", paddingTop: "1%", color:"white"}}>
-
         <Row className="buttons_panel">
           <Col>
             <img width="40px" src={activate_logo} alt="Activer" onClick={() => this.setState({ popup_open_activate: true })}></img>
@@ -358,20 +384,38 @@ class Project extends Component
               open={this.state.popup_open_cancel}
             >
               <span>
-                <Card body inverse style={{ backgroundColor: '#393939', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
-                  <CardTitle id="popupbox_title" style={{textAlign:"center"}}>! Annuler le projet !</CardTitle>
-                  <CardText style={{textAlign:"center"}}>Etes-vous sûre ?</CardText>
-                  <Row>
-                    <Button className="col ml-3" id="popupbox_button" onClick={()=> {this.cancelProject()}}>Oui</Button>
-                    <Button className="col ml-2 mr-3" id="popupbox_button" onClick={()=> {this.setState({ popup_open_cancel: false })}}>Annuler</Button>
-                  </Row>
-                </Card>
+                  {(this.state.project.status === "cancelled-after-qualification" || this.state.project.status === "cancelled-before-qualification")?(
+                    <Card body inverse style={{ backgroundColor: '#393939', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
+                      <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Le projet a déjà été annulé !</CardTitle>
+                    </Card>
+                  ):(
+                    <Card body inverse style={{ backgroundColor: '#393939', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
+                      <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Annuler le projet !</CardTitle>
+                      <CardText style={{textAlign:"center"}}>Merci de choisir la raison d'annulation et/ou remplir la case autre:</CardText>
+                      <Input type="select" value={this.state.uid_cancel_reason} onChange={(val)=>{this.setState({uid_cancel_reason: val.target.value});}}>
+                        <option value="0">Choisir une raison d'annulation</option>
+                        {this.state.cancel_reasons.map((s, i) =>
+                        (
+                          <option value={s.uid}>{s.reason_fr}</option>
+                        )
+                        )}
+                      </Input>
+                      <i style={{paddingTop:"5px"}}>Si tu ne choisis aucune raison de la liste aucun courriel ne sera envoyé automatiquement au client.</i>
+                      <Label style={{paddingTop:"5px"}}>Autre :</Label>
+                      <Input type="textarea" value={this.state.message_cancel_reason} onChange={(val)=>{this.setState({message_cancel_reason: val.target.value});}}></Input>
+                      <br/>
+                      <Row>
+                        <Button className="col ml-3" id="popupbox_button" onClick={()=> {this.cancelProject()}}>Oui</Button>
+                        <Button className="col ml-2 mr-3" id="popupbox_button" onClick={()=> {this.setState({ popup_open_cancel: false })}}>Annuler</Button>
+                      </Row>
+                    </Card>
+                  )}
               </span>
             </Popup>
           </Col>
           <Col>
-          <img width="40px" src={email_logo} alt="Courriel" onClick={() => this.setState({ popup_open_send_questions: true })}></img>
-          <Popup
+            <img width="40px" src={email_logo} alt="Courriel" onClick={() => this.setState({ popup_open_send_questions: true })}></img>
+            <Popup
               onClose={() => this.setState({ popup_open_send_questions: false })}
               closeOnDocumentClick
               open={this.state.popup_open_send_questions}
@@ -389,6 +433,8 @@ class Project extends Component
                       </Col>
                     )
                     )}
+                    <Label>Question personnalisée :</Label>
+                    <Input type="textarea" value={this.state.message_question} onChange={(val)=>{this.setState({message_question: val.target.value});}}></Input>
                   </CardText>
                   <Button id="popupbox_button" onClick={()=> {this.getCheckedQuestions()}}>Envoyer</Button>
                 </Card>  
@@ -428,15 +474,26 @@ class Project extends Component
             <img width="40px" src={duplicate_logo} alt="Copier" onClick={() => this.duplicateProject()}></img>
           </Col>
           <Col>
-          {(this.state.flagforreview === 1)?(<img width="40px" src={flag_for_review_logo_green} alt="Flag for review" onClick={() => alert("Le projet est deja flag pour etre revu")}></img>):
-          (<img width="40px" src={flag_for_review_logo} alt="Flag for review" onClick={() => this.setState({ popup_open_flag_for_review: true })}></img>)}
-            <Popup
+          {(this.state.flagforreview === 1)?(
+            <img width="40px" src={flag_for_review_logo_green} alt="Flag for review" onClick={() => this.setState({ popup_open_flag_for_review: true })}></img>
+          ):(
+            <img width="40px" src={flag_for_review_logo} alt="Flag for review" onClick={() => this.setState({ popup_open_flag_for_review: true })}></img>
+          )}
+          <Popup
               onClose={() => this.setState({ popup_open_flag_for_review: false })}
               closeOnDocumentClick
               open={this.state.popup_open_flag_for_review}
             >
+          {(this.state.flagforreview === 1)?(
               <span>
                 <Card body inverse style={{ backgroundColor: '#393939', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
+                  <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Le projet a déjà été signalé pour être revu !</CardTitle>
+                </Card>
+              </span>
+          ):
+          (
+            <span>
+              <Card body inverse style={{ backgroundColor: '#393939', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
                   <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Rappeler plus tard:</CardTitle>
                   <CardText style={{textAlign:"center"}}>Etes-vous sûre de vouloir marquer ce projet pour qu'il puisse etre revu ?</CardText>
                   <br/>
@@ -444,9 +501,10 @@ class Project extends Component
                     <Button className="col ml-3" id="popupbox_button" onClick={()=> {this.flagForReview()}}>Oui</Button>
                     <Button className="col ml-2 mr-3" id="popupbox_button" onClick={()=> {this.setState({ popup_open_flag_for_review: false })}}>Annuler</Button>
                   </Row>
-                </Card>
-              </span>
-            </Popup>
+              </Card>
+            </span>
+          )}
+          </Popup>
           </Col>
           <Col>
             <img width="40px" id={"hide_"+this.state.uid_project} src={top_arrow_icon} alt="Cacher" onClick={() => this.hideProject()}></img>
@@ -462,7 +520,6 @@ class Project extends Component
             <b style={{color:"#F9B233"}}>#{this.state.uid_project}</b>
           </Col>
         </Row>
-        
         <div id={"tohide_"+this.state.uid_project}>
           <Row>
             <Col>
@@ -693,7 +750,6 @@ class Project extends Component
             </Col>
           </Row>
         </div>
-
       </Col>
     );
   }
