@@ -13,13 +13,16 @@ class Cpm extends Component {
         uid_client: (props.uid_client)?props.uid_client:0,
         uids_projects:[],
         history:[],
-        reload_history: false
+        reload_history: false,
+        username: "Khalil",
+        already_locked: "yes"
     };
   }
   
   componentDidMount() {
     this.setState({reload_history: true})
-    this.getClientProjectsUids()
+    this.unlockClient()
+    this.lockClient()
   }
 
   setStateValue(actual_object, object_name, variable, value){
@@ -79,7 +82,22 @@ class Cpm extends Component {
     .then(() => {window.location.reload()})
     .catch(err => alert(err))
   }
-
+  lockClient(){
+    fetch(`http://localhost:4000/clients/lock?uid_client=${this.state.uid_client}&origin=gestion-client&username=${this.state.username}`)
+    .then(response => response.json())
+    .then(response => {
+      (response.data.already_locked === "no")?this.getClientProjectsUids():alert("Client déjà verrouillé")
+      this.setState({already_locked: response.data.already_locked})
+    })
+    .catch(err => alert(err))
+  }
+  unlockClient(){
+    fetch(`http://localhost:4000/clients/unlock?origin=gestion-client&username=${this.state.username}`)
+    .catch(err => alert(err))
+  }
+  getNextClient(){
+    
+  }
   handleHistoryChange = (value) =>{
     if (this.state.reload_history === true){
       this.setState({reload_history: true})
@@ -101,8 +119,7 @@ class Cpm extends Component {
           
         </div>
         <Col>
-            <Client uid_client={this.state.uid_client} ref="clientPanel"/>
-            
+            <Client uid_client={this.state.uid_client} already_locked={this.state.already_locked} ref="clientPanel"/>
             <Row style={{paddingLeft:"1%",paddingRight:"1%",paddingTop:"1%"}} className="cpm_btns">
                 <Input className="col btn sr-btn" type="button" id="b_client_uid" value={"Client #"+this.state.uid_client}
                     style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}}/>

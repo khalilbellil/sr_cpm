@@ -1,5 +1,6 @@
 import React, { Component} from 'react';
 import { Input, Col, Row, Label } from 'reactstrap';
+import $ from "jquery";
 
 class Client extends Component {
     constructor(props) {
@@ -8,12 +9,20 @@ class Client extends Component {
             uid_client: props.uid_client,
             client: [],
             phone: "",
-            uid_address: ""
+            uid_address: "",
+            already_locked: (props.uid_client)?props.uid_client:"no"
         };
     }
 
     componentDidMount() {
         this.getClient(this.state.uid_client);
+    }
+    static getDerivedStateFromProps(props, prevState){
+        if (props.already_locked === "yes"){
+            $(`#client-panel :input`).attr("disabled", true)
+        }else{
+            $(`#client-panel :input`).attr("disabled", false)
+        }
     }
 
     setStateValue(actual_object, object_name, variable, value){
@@ -54,7 +63,7 @@ class Client extends Component {
         fetch('http://localhost:4000/clients/get?uid='+uid)
         .then(response => response.json())
         .then(response => this.setState({ client: response.data[0]}))
-        .then(()=>this.getPhone())
+        .then(() => this.getPhone())
         .catch(err => alert(err))
     }
     getPhone(){

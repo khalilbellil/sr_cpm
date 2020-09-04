@@ -323,6 +323,57 @@ app.get('/client_history/add', (req, res) => {
 })
 //#endregion
 
+//#region client_lock
+app.get('/clients/lock', (req, res) => {
+    const{ uid_client, origin, username } = req.query
+    const GET_QUERY = `SELECT * FROM sr_cs_register WHERE uid_client = '${uid_client}'`
+    connection.query(GET_QUERY, (err, result1) => {
+        if(err) {
+            console.log(err)
+            return res.send(err)
+        } else {
+            if (result1[0] === undefined){
+                const INSERT_USER_QUERY = `INSERT INTO sr_cs_register(uid_client, origin, uid_agent, status, isLocked) VALUES('${uid_client}', '${origin}', '${username}', 'locked', 'yes')`
+                connection.query(INSERT_USER_QUERY, (err, result) => {
+                    if(err) {
+                        console.log(err)
+                        return res.json({
+                            data: {already_locked: "no"}
+                        })
+                    } else {
+                        return res.json({
+                            data: {already_locked: "no"}
+                        })
+                    }
+                })
+            }else{
+                if (result1[0].uid_agent !== username){
+                    return res.json({
+                        data: {already_locked: "yes"}
+                    })
+                }else{
+                    return res.json({
+                        data: {already_locked: "no"}
+                    })
+                }
+            }
+        }
+    })
+})
+app.get('/clients/unlock', (req, res) => {
+    const{ origin, username } = req.query
+    const INSERT_USER_QUERY = `DELETE FROM sr_cs_register WHERE uid_agent = '${username}' AND origin = '${origin}'`
+    connection.query(INSERT_USER_QUERY, (err, result) => {
+        if(err) {
+            console.log(err)
+            return res.send(err)
+        } else {
+            return res.send('succes')
+        }
+    })
+})
+//#endregion
+
 //#region others
 app.get('/services', (req, res) => {
     const SELECT_ALL_QUERY = 'SELECT * FROM sr_service WHERE active="yes"'
