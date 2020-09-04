@@ -96,7 +96,6 @@ class Cpm extends Component {
     .catch(err => alert(err))
   }
   getNextClient(){
-    
   }
   handleHistoryChange = (value) =>{
     if (this.state.reload_history === true){
@@ -116,7 +115,6 @@ class Cpm extends Component {
         </div>
         <div className="col-3" id="tohide_history">
           <History uid_client={this.state.uid_client} reload_history={this.state.reload_history}/>
-          
         </div>
         <Col>
             <Client uid_client={this.state.uid_client} already_locked={this.state.already_locked} ref="clientPanel"/>

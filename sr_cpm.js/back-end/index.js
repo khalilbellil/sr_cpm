@@ -25,6 +25,15 @@ connection.connect(err => {
 
 app.use(cors())
 
+//#region Toolbox
+function stringReturnIfNull(string, result_if_null){
+    if(string === null){
+        string = result_if_null
+    }
+    return string
+}
+//#endregion
+
 //#region Save_ajax
 app.get('/update/one', (req, res) => {
     const{ table, uid, one, one_val } = req.query
@@ -174,9 +183,9 @@ app.get('/projects/duplicate', (req, res) => {
         } else {
             const INSERT = `INSERT INTO sr_project(status, uid_client, sn_custom,uid_address,description,due_date,has_file,uid_service,uid_secondary_service,lead_price,estimated_value,additional_info, 
                 uid_project_type,comments,best_contact_way,project_type,delay_from,delay_to,delay_options,shared_budget,employee,quality) VALUES('new', '${result1[0].uid_client}',0,${result1[0].uid_address},
-                '${result1[0].description}', '${result1[0].due_date}', ${result1[0].has_file}, ${result1[0].uid_service}, ${result1[0].uid_secondary_service}, ${result1[0].lead_price},
-                ${result1[0].estimated_value}, '${result1[0].additional_info}', ${result1[0].uid_project_type}, '${result1[0].comments}','${result1[0].best_contact_way}','${result1[0].project_type}',
-                '${format(new Date(result1[0].delay_from), 'yyyy-MM-dd')}','${format(new Date(result1[0].delay_to), 'yyyy-MM-dd')}',${result1[0].delay_options},'${result1[0].shared_budget}','${result1[0].employee}','${result1[0].quality}')`
+                '${stringReturnIfNull(result1[0].description, '')}', '${stringReturnIfNull(result1[0].due_date, '')}', ${result1[0].has_file}, ${result1[0].uid_service}, ${result1[0].uid_secondary_service}, ${result1[0].lead_price},
+                ${result1[0].estimated_value}, '${stringReturnIfNull(result1[0].additional_info, '')}', ${result1[0].uid_project_type}, '${stringReturnIfNull(result1[0].comments, "")}','${stringReturnIfNull(result1[0].best_contact_way,"")}','${stringReturnIfNull(result1[0].project_type,"")}',
+                '${format(new Date(result1[0].delay_from), 'yyyy-MM-dd')}','${format(new Date(result1[0].delay_to), 'yyyy-MM-dd')}',${result1[0].delay_options},'${stringReturnIfNull(result1[0].shared_budget,"")}','${stringReturnIfNull(result1[0].employee, 'no')}','${stringReturnIfNull(result1[0].quality, "standard")}')`
             connection.query(INSERT, (err, result2) => {
                 if(err) {
                     console.log(err)

@@ -143,9 +143,11 @@ class Project extends Component
       .then(response => response.json())
       .then(response => this.setStateObjects("subservices", response.data))
       .then(response => {this.setStateValue(this.state.project, "project", "uid_service", uid);document.getElementById("subservice_"+this.state.uid_project).value="0"})
+      .then(() => this.getServiceQuestions())
       .catch(err => alert(err))
   }
   getServiceQuestions(){
+    this.state.service_questions = []
     fetch('http://localhost:4000/service_questions?uid_service='+this.state.project.uid_service)
     .then(response => response.json())
     .then(response => this.setStateObjects("service_questions", response.data))
@@ -446,9 +448,6 @@ class Project extends Component
             </Popup>
           </Col>
           <Col>
-            <img width="40px" src={call_logo} alt="Appeler" onClick={() => window.open('tel:'+this.state.address.phone1, "_self")}></img>
-          </Col>
-          <Col>
             <img width="40px" src={call_back_later_logo} alt="Appeler plus tard" onClick={() => this.setState({ popup_open_call_back_later: true })}></img>
             <Popup
               onClose={() => this.setState({ popup_open_call_back_later: false })}
@@ -470,6 +469,9 @@ class Project extends Component
                 </Card>
               </span>
             </Popup>
+          </Col>
+          <Col>
+            <img width="40px" src={call_logo} alt="Appeler" onClick={() => window.open('tel:'+this.state.address.phone1, "_self")}></img>
           </Col>
           <Col>
             <img width="40px" src={google_map_logo} alt="Google Map" onClick={() => this.openGoogleMap()}></img>
