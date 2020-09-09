@@ -18,10 +18,13 @@ class History extends Component {
   }
   componentWillReceiveProps(props){
     if (props.reload_history === true){
-      this.getHistory();
+      this.getHistory(props.uid_client);
     }
     if (this.state.reload === false)
       this.setState({reload: props.reload_history})
+    if (props.uid_client !== this.state.uid_client){
+      this.getHistory(props.uid_client)
+    }
   }
 
   setStateValue(actual_object, object_name, variable, value){
@@ -68,8 +71,9 @@ class History extends Component {
     &username=${this.state.username}&comments=${comments}`)
     .catch(err => alert.log(err))
   }
-  getHistory(){
-    fetch(`http://localhost:4000/client_history/get_by_client?uid_client=${this.state.uid_client}
+  getHistory(uid){
+    this.state.history = []
+    fetch(`http://localhost:4000/client_history/get_by_client?uid_client=${uid}
     &lg=fr`)
     .then(response => response.json())
     .then(response => this.setStateObjects("history", response.data))
@@ -99,7 +103,7 @@ class History extends Component {
                           if (this.state.reload === true){
                             return (
                             <tr>
-                                <td>{format(new Date(h.sn_cdate), 'yyyy-MM-dd hh:mm:ss')}</td>
+                                <td>{format(new Date(h.sn_cdate), 'yyyy-MM-dd hh:mm:ss a')}</td>
                                 <th scope="row">{h.msg}</th>
                                 <td>{h.followup_agent}</td>
                             </tr>

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { Row, Input, Col } from 'reactstrap';
+import { Row, Col, Input, Button, Card, CardTitle, CardText} from 'reactstrap';
+import Popup from "reactjs-popup";
 import Client from './Client';
 import Project from './Project';
 import History from './History';
@@ -10,21 +11,28 @@ class Cpm extends Component {
   constructor(props) {
     super(props);
     this.state = {
-        uid_client: (props.uid_client)?props.uid_client:0,
+        uid_client: props.uid_client,
         uids_projects:[],
         history:[],
         reload_history: false,
         username: "Khalil",
-        already_locked: "yes"
+        already_locked: "yes",
+        popup_open_search_client: false,
+        search_value: ""
     };
   }
   
   componentDidMount() {
-    this.setState({reload_history: true})
-    this.unlockClient()
-    this.lockClient()
+    if (this.state.uid_client === undefined){
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('uid_client') !== null){
+        this.setState({uid_client: urlParams.get('uid_client')})
+        this.setState({reload_history: true})
+        this.unlockClient()
+        this.lockClient(urlParams.get('uid_client'))
+      }
+    }
   }
-
   setStateValue(actual_object, object_name, variable, value){
     if (actual_object !== undefined){
       actual_object[variable] = value
@@ -71,31 +79,52 @@ class Cpm extends Component {
     this.showHideElement("tohide_history");
     this.showHideElement("toshow_history");
   }
-  getClientProjectsUids(){
-    fetch('http://localhost:4000/client/get_projects?uid_client='+this.state.uid_client)
+  getClientProjectsUids(uid){
+    this.state.uids_projects = []
+    fetch('http://localhost:4000/client/get_projects?uid_client='+uid)
     .then(response => response.json())
     .then(response => this.setStateObjects("uids_projects", response.data))
     .catch(err => alert(err))
   }
   createProject(){
     fetch('http://localhost:4000/projects/new?uid_client='+this.state.uid_client)
-    .then(() => {window.location.reload()})
-    .catch(err => alert(err))
-  }
-  lockClient(){
-    fetch(`http://localhost:4000/clients/lock?uid_client=${this.state.uid_client}&origin=gestion-client&username=${this.state.username}`)
-    .then(response => response.json())
-    .then(response => {
-      (response.data.already_locked === "no")?this.getClientProjectsUids():alert("Client déjà verrouillé")
-      this.setState({already_locked: response.data.already_locked})
+    .then(() => {
+      this.setState({reload_history: true})
+      this.unlockClient()
+      this.lockClient(this.state.uid_client)
     })
     .catch(err => alert(err))
+  }
+  lockClient(uid_client){
+    if(uid_client !== undefined){
+      fetch(`http://localhost:4000/clients/lock?uid_client=${uid_client}&origin=gestion-client&username=${this.state.username}`)
+      .then(response => response.json())
+      .then(response => {
+        (response.data.already_locked === "no")?this.getClientProjectsUids(uid_client):alert("Client déjà verrouillé")
+        this.setState({already_locked: response.data.already_locked})
+      })
+      .catch(err => alert(err))
+    }
   }
   unlockClient(){
     fetch(`http://localhost:4000/clients/unlock?origin=gestion-client&username=${this.state.username}`)
     .catch(err => alert(err))
   }
   getNextClient(){
+    fetch(`http://localhost:4000/clients/get_next_client?username=${this.state.username}&origin=gestion-client&lg=fr`)
+    .then(response => response.json())
+    .then(response => {
+      if (response.data.found !== "no"){
+        this.getClientProjectsUids(response.data[0].uid)
+        this.setState({uid_client: response.data[0].uid})
+        this.setState({reload_history: true})
+        this.unlockClient()
+        this.lockClient(response.data[0].uid)
+      }else{
+        alert("Aucun client trouvé")
+      }
+    })
+    .catch(err => alert(err))
   }
   handleHistoryChange = (value) =>{
     if (this.state.reload_history === true){
@@ -105,6 +134,23 @@ class Cpm extends Component {
     else{
       this.setState({reload_history: true})
     }
+  }
+  searchClient(new_tab){
+    if (this.state.search_value !== ""){
+      if (this.state.search_value[0] === ":"){
+
+      }else if (this.state.search_value[0] === "#"){
+
+      }else{
+        var url = window.location.href.split('?')[0] + "?uid_client=" + this.state.search_value
+        if (new_tab){
+          window.open(url, "_blank")
+        }else{
+          window.open(url, "_self")
+        }
+      }
+    }
+    this.setState({ popup_open_search_client: false })
   }
 
   render() {
@@ -119,13 +165,39 @@ class Cpm extends Component {
         <Col>
             <Client uid_client={this.state.uid_client} already_locked={this.state.already_locked} ref="clientPanel"/>
             <Row style={{paddingLeft:"1%",paddingRight:"1%",paddingTop:"1%"}} className="cpm_btns">
-                <Input className="col btn sr-btn" type="button" id="b_client_uid" value={"Client #"+this.state.uid_client}
+                <Input className="col-3 btn sr-btn" type="button" id="b_client_uid" value={(this.state.uid_client !== undefined)?"Client #"+this.state.uid_client:"Aucun"}
                     style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}}/>
                 <div className="col-1"></div>
-                <Input className="col-2 btn sr-btn" type="button" value="Nouveau projet" onClick={() => this.createProject()} 
+                {(this.state.uid_client === undefined)?(
+                  <Input className="col-2 btn sr-btn" type="button" value="Nouveau projet" onClick={() => this.createProject()} 
+                  style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}} disabled/>
+                ):(
+                  <Input className="col-2 btn sr-btn" type="button" value="Nouveau projet" onClick={() => this.createProject()} 
+                  style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}}/>
+                )}
+                <div className="col-1"></div>
+                <Input className="col-2 btn sr-btn" type="button" value="Recherche client" onClick={() => this.setState({ popup_open_search_client: true })} 
                 style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}} />
-                <div className="col-5"></div>
-                <Input className="col-2 btn sr-btn" type="button" onClick="" value="Next Client" 
+                <Popup
+                  onClose={() => this.setState({ popup_open_search_client: false })}
+                  closeOnDocumentClick
+                  open={this.state.popup_open_search_client}
+                >
+                  <span>
+                    <Card body inverse style={{ backgroundColor: '#393939', borderColor: '#F9B233', borderWidth: "4px", padding:"10px", color: "white" }}>
+                      <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Recherche client</CardTitle>
+                      <Input type="text" placeholder="client(35702),projet(#12321),tel(:5142134323)" value={this.state.search_value} onChange={(val)=>{this.setState({search_value: val.target.value});}}/>
+                      <br/>
+                      <Row>
+                        <Button className="col ml-3" id="popupbox_button" onClick={()=> {this.searchClient(true)}}>Rechercher(Nouvelle fenêtre)</Button>
+                        <Button className="col ml-1" id="popupbox_button" onClick={()=> {this.searchClient(false)}}>Rechercher(Même fenêtre)</Button>
+                        <Button className="col ml-1 mr-3" id="popupbox_button" onClick={()=> {this.setState({ popup_open_search_client: false })}}>Annuler</Button>
+                      </Row>
+                    </Card>
+                  </span>
+                </Popup>
+                <div className="col-1"></div>
+                <Input className="col-2 btn sr-btn" type="button" onClick={() => this.getNextClient()} value="Next Client" 
                     style={{fontSize:"15px", border:"solid 3px #393939",backgroundColor:"#00517E",color:"white",boxShadow:"0px 6px 6px rgba(0, 0, 0, 0.35)",borderRadius: "10px"}}/>
             </Row>
             <br />
@@ -137,7 +209,6 @@ class Cpm extends Component {
                 </Row>
               )
             )}
-            
         </Col>
       </Row>
     );

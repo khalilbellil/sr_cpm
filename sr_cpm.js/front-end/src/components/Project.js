@@ -7,6 +7,7 @@ import call_back_later_logo from "../img/call_back_later_logo.png";
 import activate_logo from "../img/activate_logo.png";
 import cancel_logo from "../img/cancel_logo.png";
 import email_logo from "../img/email_logo.png";
+import clipart from "../img/clipart.png";
 import duplicate_logo from "../img/duplicate_logo.png";
 import flag_for_review_logo from "../img/flag_for_review_logo.png";
 import flag_for_review_logo_green from "../img/flag_for_review_logo_green.png";
@@ -39,12 +40,15 @@ class Project extends Component
             uid_cancel_reason: undefined,
             message_cancel_reason: undefined,
             cancel_reasons: [],
-            message_question: ""
+            message_question: "",
+            nb_files: 0,
+            popup_open_files: false
         };
   }
   componentDidMount() {
     this.getProject(this.state.uid_project);
   }
+
 //#region FUNCTIONS
   setStateValue(actual_object, object_name, variable, value){
     if (actual_object !== undefined){
@@ -107,6 +111,24 @@ class Project extends Component
     .then(() => {
       this.setStateValue(this.state.project, "project", "delay_from", format(new Date(this.state.project.delay_from), 'yyyy-MM-dd'))
       this.setStateValue(this.state.project, "project", "delay_to", format(new Date(this.state.project.delay_to), 'yyyy-MM-dd'))
+      this.setStateValue(this.state.project, "project", "sn_cdate", format(new Date(this.state.project.sn_cdate), 'yyyy-MM-dd hh:mm:ss a'))
+      var count = 0;
+      if (this.state.project.file1 !== undefined && this.state.project.file1 !== null){
+        count ++;
+      }
+      if (this.state.project.file2 !== undefined && this.state.project.file2 !== null){
+        count ++;
+      }
+      if (this.state.project.file3 !== undefined && this.state.project.file3 !== null){
+        count ++;
+      }
+      if (this.state.project.file4 !== undefined && this.state.project.file4 !== null){
+        count ++;
+      }
+      if (this.state.project.file5 !== undefined && this.state.project.file5 !== null){
+        count ++;
+      }
+      this.setState({nb_files: count})
     })
     .then(() => this.getCallBackLater())
     .then(() => this.getFlagForReview())
@@ -353,7 +375,10 @@ class Project extends Component
   }
   duplicateProject(){
     fetch('http://localhost:4000/projects/duplicate?uid='+this.state.project.uid)
-    .then(() => {window.location.reload()})
+    .then(() => {
+      var url = window.location.href.split('?')[0] + "?uid_client=" + this.state.project.uid_client
+      window.location.href = url;
+    })
     .catch(err => alert(err))
   }
 //#endregion
@@ -516,16 +541,44 @@ class Project extends Component
             <img width="40px" id={"hide_"+this.state.uid_project} src={down_arrow_icon} alt="Cacher" onClick={() => this.hideProject()}></img>
           </Col>
         </Row>
-        <Row className="status_panel">
-          <Col className="col-4">
+        
+        <Row className="status_panel pt-2 pb-1">
+          <div className="col">
             <b>Status:</b> <b style={{color:"#F9B233"}}>{this.state.project.status}</b>
-          </Col>
-          <Col className="col">
-          </Col>
-          <Col className="col-2 text-center">
+          </div>
+          <div className="col text-center">
+            <b>Date de soumission:</b> <b style={{color:"#F9B233"}}>{this.state.project.sn_cdate}</b>
+          </div>
+          <div className="col-2 text-right">
+            <b style={{color:"#F9B233"}}>{this.state.nb_files}</b>&nbsp;<img width="20px" src={clipart} alt="Fichiers joints" 
+            onClick={() => this.setState({popup_open_files: true})} style={{cursor: "pointer"}}></img>
+            <Popup
+              onClose={() => this.setState({ popup_open_files: false })}
+              closeOnDocumentClick
+              open={this.state.popup_open_files}
+            >
+              <span>
+                <Card body inverse style={{ backgroundColor: '#393939', borderColor: '#F9B233', borderWidth: "4px", padding:"10px" }}>
+                  <CardTitle id="popupbox_title" style={{textAlign:"center"}}>Fichiers joints</CardTitle>
+                  <CardText style={{textAlign:"center"}}>
+                    {(this.state.project.file1)?(<img width="375px" onClick={() => window.open("https://soumissionrenovation.ca"+this.state.project.file1, "_blank")} src={"https://soumissionrenovation.ca"+this.state.project.file1} style={{cursor: "pointer"}}></img>):(null)}
+                    {(this.state.project.file2)?(<img width="375px" onClick={() => window.open("https://soumissionrenovation.ca"+this.state.project.file2, "_blank")} src={"https://soumissionrenovation.ca"+this.state.project.file2} style={{cursor: "pointer"}}></img>):(null)}
+                    {(this.state.project.file3)?(<img width="375px" onClick={() => window.open("https://soumissionrenovation.ca"+this.state.project.file3, "_blank")} src={"https://soumissionrenovation.ca"+this.state.project.file3} style={{cursor: "pointer"}}></img>):(null)}
+                    {(this.state.project.file4)?(<img width="375px" onClick={() => window.open("https://soumissionrenovation.ca"+this.state.project.file4, "_blank")} src={"https://soumissionrenovation.ca"+this.state.project.file4} style={{cursor: "pointer"}}></img>):(null)}
+                    {(this.state.project.file5)?(<img width="375px" onClick={() => window.open("https://soumissionrenovation.ca"+this.state.project.file5, "_blank")} src={"https://soumissionrenovation.ca"+this.state.project.file5} style={{cursor: "pointer"}}></img>):(null)}
+                  </CardText>
+                  <Row>
+                    <Button className="col ml-3 mr-3" id="popupbox_button" onClick={()=> {this.setState({ popup_open_files: false })}}>OK</Button>
+                  </Row>
+                </Card>
+              </span>
+            </Popup>
+          </div>
+          <div className="col-2 text-right">
             <b style={{color:"#F9B233"}}>#{this.state.uid_project}</b>
-          </Col>
+          </div>
         </Row>
+        
         <div id={"tohide_"+this.state.uid_project} style={{display:"none"}}>
           <Row>
             <Col>
@@ -533,18 +586,20 @@ class Project extends Component
               <h6 style={{textAlign:"center"}}>Description</h6>
               <hr style={{borderTop:"white 1px solid"}} />
               <Editor
+                apiKey="rpg0vwsws34iize77k9uf2afya24z2f7wqq3i3rg84evn1k3" 
                 initialValue={this.state.project.description}
-                        init={{
-                          height: 400,
-                          menubar: false,
-                          plugins: [
-                            'advlist autolink lists link image charmap print preview anchor',
-                            'searchreplace visualblocks code fullscreen',
-                            'insertdatetime media table paste code help wordcount'
-                          ],
-                          toolbar:
-                            'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
-                        }}
+                value={this.state.project.description}
+                init={{
+                  height: 400,
+                  menubar: false,
+                  plugins: [
+                    'advlist autolink lists link image charmap print preview anchor',
+                    'searchreplace visualblocks code fullscreen',
+                    'insertdatetime media table paste code help wordcount'
+                  ],
+                  toolbar:
+                    'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'
+                }}
                 onEditorChange={this.handleEditorChange}
               />
             </Col>

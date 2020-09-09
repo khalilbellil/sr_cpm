@@ -7,14 +7,14 @@ const { format } = require('date-fns');
 const app = express()
 //#region Database Config
 const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'Kookie&09',
-    database: 'sr_test'
-    // host: 'soumissionrenovation.ca',
-    // user: 'khalilbellil',
-    // password: 'NPVVTsDdPwf7TTzfWAQj3QNBvsZ478oxuu4M3cB2j7xLDq7HBw',
-    // database: 'srv1'
+    // host: 'localhost',
+    // user: 'root',
+    // password: 'Kookie&09',
+    // database: 'sr_test'
+    host: 'soumissionrenovation.ca',
+    user: 'khalilbellil',
+    password: 'NPVVTsDdPwf7TTzfWAQj3QNBvsZ478oxuu4M3cB2j7xLDq7HBw',
+    database: 'srv5'
 })
 //#endregion
 connection.connect(err => {
@@ -88,11 +88,145 @@ app.get('/clients/get', (req, res) => {
     const GET_BY_ID_QUERY = `SELECT * FROM sr_client WHERE uid='${uid}'`
     connection.query(GET_BY_ID_QUERY, (err, result) => {
         if(err) {
-            return res.send(err)
+            return res.json({
+                data: result
+            })
         } else {
             return res.json({
                 data: result
             })
+        }
+    })
+})
+app.get('/clients/get_next_client', (req, res) => {
+    const{ username, origin, lg } = req.query
+    if (lg === "fr"){
+        var lang = "AND c.lang = 'fr'"
+    }else if (lg === "en"){
+        var lang = "AND c.lang = 'en'"
+    }else{
+        var lang = ""
+    }
+    const GET_QUERY = `SELECT c.uid, (SELECT isLocked FROM sr_cs_register WHERE uid_client = c.uid LIMIT 1) as locked,
+    (SELECT uid_agent FROM sr_cs_register WHERE uid_client = c.uid LIMIT 1) as locked_by
+     FROM sr_client c INNER JOIN sr_project p ON p.uid_client = c.uid LEFT JOIN sr_address a ON a.uid_client = c.uid 
+    LEFT JOIN sr_call_back_later cb ON cb.uid_project = p.uid AND cb.done = 'no' WHERE (p.status = 'new' OR (p.status = 'free' AND p.sn_cdate > curdate() - INTERVAL 10 DAY)) 
+    AND p.flag_for_review IS NULL AND (cb.uid is null OR ((cb.done IS NULL OR cb.done = 'no') AND cb.call_back_date IS NOT NULL AND cb.call_back_date <= NOW() + interval 5 minute)) ${lang} `
+    const QUERY_0 = `AND (NOT EXISTS(SELECT * from sr_followup WHERE msg_uid IN(1,11,6,4,3,5) AND uid_project = p.uid) OR c.request_state = 'partial')
+    AND EXISTS(SELECT * FROM sr_project WHERE status = 'new' AND uid_client = p.uid_client)
+    AND (skipped_by <> '${username}' OR skipped_by is null OR skipped_by = '')
+    HAVING locked = 'yes' AND locked_by = '${username}' ORDER BY p.status = 'new' DESC, p.sn_cdate ASC LIMIT 1`
+    const QUERY_FINAL0 = GET_QUERY + QUERY_0
+    connection.query(QUERY_FINAL0, (err, result) => {
+        if(err) {
+            console.log(err)
+            return res.send(err)
+        } else {
+            if (result[0] !== undefined){
+                return res.json({
+                    data: result
+                })
+            }else{
+                const QUERY_FINAL1 = `SELECT c.uid, p.uid as uid_project, (SELECT isLocked FROM sr_cs_register WHERE uid_client = c.uid AND uid_agent != '${username}' LIMIT 1) as locked,
+                (SELECT uid_agent FROM sr_cs_register WHERE uid_client = c.uid LIMIT 1) as locked_by FROM sr_client c 
+                INNER JOIN sr_project p ON p.uid_client = c.uid 
+                LEFT JOIN sr_address a ON a.uid_client = c.uid 
+                INNER JOIN sr_call_back_later cb ON cb.uid_project = p.uid 
+                WHERE (p.status = 'new' OR (p.status = 'free' AND p.sn_cdate > curdate() - INTERVAL 10 DAY)) 
+                AND p.flag_for_review IS NULL 
+                AND cb.done IS NULL OR cb.done = 'no' 
+                AND cb.call_back_date IS NOT NULL 
+                AND cb.call_back_date - INTERVAL 5 MINUTE <= NOW() 
+                AND EXISTS(SELECT * FROM sr_project WHERE status = 'new' AND uid_client = p.uid_client) 
+                HAVING (locked='' OR ISNULL(locked))  
+                ORDER BY p.status = 'new' DESC, p.sn_cdate ASC, p.call_back_later ASC LIMIT 100`
+                connection.query(QUERY_FINAL1, (err, result) => {
+                    if(err) {
+                        console.log(err)
+                        return res.send(err)
+                    } else {
+                        if (result[0] !== undefined){
+                            const UPDATE_CALL_BACK = `UPDATE sr_call_back_later SET done = 'yes' WHERE uid_project = '${result[0].uid_project}'`
+                            connection.query(UPDATE_CALL_BACK, (err, result_update) => {
+                                if(err) {
+                                    console.log(err)
+                                    return res.send(err)
+                                } else {
+                                    console.log("call back done")
+                                    return res.json({
+                                        data: result
+                                    })
+                                }
+                            })
+                        }else{
+                            const QUERY_2 = `AND (
+                                (p.sn_cdate > (NOW() - INTERVAL 20 MINUTE) AND p.sn_cdate < (NOW() - INTERVAL 7 MINUTE) AND hour(now()) < 15)
+                                OR
+                                (p.adwords_campaign = 'phaseone')
+                                )
+                            AND (NOT EXISTS(SELECT * from sr_followup WHERE msg_uid IN(1,11,6,4,5) AND uid_project = p.uid) OR c.request_state = 'partial')
+                            AND (skipped_by <> '${username}' OR skipped_by is null OR skipped_by = '')
+                            HAVING (locked='' OR ISNULL(locked)) 
+                            ORDER BY p.status = 'new' DESC, p.sn_cdate ASC LIMIT 100`
+                            const QUERY_FINAL2 = GET_QUERY + QUERY_2
+                            connection.query(QUERY_FINAL2, (err, result) => {
+                                if(err) {
+                                    console.log(err)
+                                    return res.send(err)
+                                } else {
+                                    if (result[0] !== undefined){
+                                        return res.json({
+                                            data: result
+                                        })
+                                    }else{
+                                        const QUERY_3 = `AND p.sn_cdate < NOW() - INTERVAL 6 HOUR
+                                        AND (NOT EXISTS(SELECT * from sr_followup WHERE msg_uid IN(1,11,6,4,5) AND uid_project = p.uid) OR c.request_state = 'partial')
+                                        AND (skipped_by <> '${username}' OR skipped_by is null OR skipped_by = '')
+                                        HAVING (locked='' OR ISNULL(locked))  
+                                        ORDER BY p.status = 'new' DESC, DATE(p.sn_cdate) ASC, p.treatment_priority DESC LIMIT 100`
+                                        const QUERY_FINAL3 = GET_QUERY + QUERY_3
+                                        connection.query(QUERY_FINAL3, (err, result) => {
+                                            if(err) {
+                                                console.log(err)
+                                                return res.send(err)
+                                            } else {
+                                                if (result[0] !== undefined){
+                                                    return res.json({
+                                                        data: result
+                                                    })
+                                                }else{
+                                                    const QUERY_4 = `AND p.sn_cdate < (NOW() - INTERVAL 5 MINUTE)
+                                                    AND (NOT EXISTS(SELECT * from sr_followup WHERE msg_uid IN(1,11,6,4,5,3) AND uid_project = p.uid) OR c.request_state = 'partial')
+                                                    AND (skipped_by <> '${username}' OR skipped_by is null OR skipped_by = '')
+                                                    HAVING (locked='' OR ISNULL(locked)) 
+                                                    ORDER BY p.status = 'new' DESC, p.sn_cdate ASC LIMIT 100`
+                                                    const QUERY_FINAL4 = GET_QUERY + QUERY_4
+                                                    connection.query(QUERY_FINAL4, (err, result) => {
+                                                        if(err) {
+                                                            console.log(err)
+                                                            return res.send(err)
+                                                        } else {
+                                                            if (result[0] !== undefined){
+                                                                return res.json({
+                                                                    data: result
+                                                                })
+                                                            }else{
+                                                                return res.json({
+                                                                    data: {found: "no"}
+                                                                })
+                                                            }
+                                                        }
+                                                    })
+                                                }
+                                            }
+                                        })
+                                    }
+                                }
+                            })
+                        }
+                    }
+                })
+            }
         }
     })
 })
@@ -164,7 +298,7 @@ app.get('/projects/get_by_client', (req, res) => {
 })
 app.get('/projects/new', (req, res) => {
     const{ uid_client } = req.query
-    const INSERT_USER_QUERY = `INSERT INTO sr_project(status, uid_client, sn_custom) VALUES('new', '${uid_client}', 0)`
+    const INSERT_USER_QUERY = `INSERT INTO sr_project(sn_cdate, sn_mdate, status, uid_client, sn_custom) VALUES(NOW(), NOW(), 'new', '${uid_client}', 0)`
     connection.query(INSERT_USER_QUERY, (err, result) => {
         if(err) {
             return res.send(err)
@@ -181,8 +315,8 @@ app.get('/projects/duplicate', (req, res) => {
             console.log(err)
             return res.send(err)
         } else {
-            const INSERT = `INSERT INTO sr_project(status, uid_client, sn_custom,uid_address,description,due_date,has_file,uid_service,uid_secondary_service,lead_price,estimated_value,additional_info, 
-                uid_project_type,comments,best_contact_way,project_type,delay_from,delay_to,delay_options,shared_budget,employee,quality) VALUES('new', '${result1[0].uid_client}',0,${result1[0].uid_address},
+            const INSERT = `INSERT INTO sr_project(sn_cdate, sn_mdate, status, uid_client, sn_custom,uid_address,description,due_date,has_file,uid_service,uid_secondary_service,lead_price,estimated_value,additional_info, 
+                uid_project_type,comments,best_contact_way,project_type,delay_from,delay_to,delay_options,shared_budget,employee,quality) VALUES(NOW(), NOW(), 'new', '${result1[0].uid_client}',0,${result1[0].uid_address},
                 '${stringReturnIfNull(result1[0].description, '')}', '${stringReturnIfNull(result1[0].due_date, '')}', ${result1[0].has_file}, ${result1[0].uid_service}, ${result1[0].uid_secondary_service}, ${result1[0].lead_price},
                 ${result1[0].estimated_value}, '${stringReturnIfNull(result1[0].additional_info, '')}', ${result1[0].uid_project_type}, '${stringReturnIfNull(result1[0].comments, "")}','${stringReturnIfNull(result1[0].best_contact_way,"")}','${stringReturnIfNull(result1[0].project_type,"")}',
                 '${format(new Date(result1[0].delay_from), 'yyyy-MM-dd')}','${format(new Date(result1[0].delay_to), 'yyyy-MM-dd')}',${result1[0].delay_options},'${stringReturnIfNull(result1[0].shared_budget,"")}','${stringReturnIfNull(result1[0].employee, 'no')}','${stringReturnIfNull(result1[0].quality, "standard")}')`
@@ -378,6 +512,22 @@ app.get('/clients/unlock', (req, res) => {
             return res.send(err)
         } else {
             return res.send('succes')
+        }
+    })
+})
+//#endregion
+
+//#region search_client
+app.get('/clients/get', (req, res) => {
+    const{ uid } = req.query
+    const GET_BY_ID_QUERY = `SELECT uid FROM sr_client WHERE phone1='${uid}'`
+    connection.query(GET_BY_ID_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.json({
+                data: result
+            })
         }
     })
 })

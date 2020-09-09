@@ -10,14 +10,24 @@ class Client extends Component {
             client: [],
             phone: "",
             uid_address: "",
-            already_locked: (props.uid_client)?props.uid_client:"no"
+            already_locked: (props.already_locked)?props.already_locked:"no"
         };
     }
 
     componentDidMount() {
-        this.getClient(this.state.uid_client);
+        if (this.state.uid_client !== undefined)
+            this.getClient(this.state.uid_client);
+        if (this.state.already_locked === "yes"){
+            $(`#client-panel :input`).attr("disabled", true)
+        }else{
+            $(`#client-panel :input`).attr("disabled", false)
+        }
     }
-    static getDerivedStateFromProps(props, prevState){
+    componentWillReceiveProps(props){
+        if (props.uid_client !== this.state.uid_client){
+            this.setState({uid_client: props.uid_client})
+            this.getClient(props.uid_client)
+        }
         if (props.already_locked === "yes"){
             $(`#client-panel :input`).attr("disabled", true)
         }else{
@@ -62,7 +72,14 @@ class Client extends Component {
     getClient = (uid) => {
         fetch('http://localhost:4000/clients/get?uid='+uid)
         .then(response => response.json())
-        .then(response => this.setState({ client: response.data[0]}))
+        .then(response => {
+            if (response.data[0] !== undefined){
+                this.setState({ client: response.data[0]})
+            }else{
+                this.setState({ client: []})
+                alert("Client introuvable !")
+            }
+        })
         .then(() => this.getPhone())
         .catch(err => alert(err))
     }
