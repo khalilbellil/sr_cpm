@@ -96,13 +96,13 @@ class Project extends Component
     this.setState(actual_state);
   }
   saveAjax(table, uid, one, one_val){
-    fetch(`http://localhost:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
+    fetch(`http://ssrv5.sednove.com:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
     .then(response => response.json())
     .catch(err => console.log(err))
   }
   
   getProject = (uid) => {
-    fetch('http://localhost:4000/projects/get?uid='+uid)
+    fetch('http://ssrv5.sednove.com:4000/projects/get?uid='+uid)
     .then(response => response.json())
     .then(response => {this.setStateObject("project", response.data[0])})
     .then(() => {this.getServices()})
@@ -145,7 +145,7 @@ class Project extends Component
     this.setState({nb_files: count})
   }
   getAddress(){
-    fetch('http://localhost:4000/address?uid='+this.state.project.uid_address)
+    fetch('http://ssrv5.sednove.com:4000/address?uid='+this.state.project.uid_address)
     .then(response => response.json())
     .then(response => {
       if (response.data[0] !== undefined){
@@ -157,11 +157,11 @@ class Project extends Component
   }
   saveAjaxAddress(table, uid, one, one_val){
     if (this.state.address.uid !== undefined){
-      fetch(`http://localhost:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
+      fetch(`http://ssrv5.sednove.com:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
       .then(response => response.json())
       .catch(err => console.log(err))
     }else{
-      fetch(`http://localhost:4000/address/add?one=${one}&one_val=${one_val}&uid_client=${this.state.project.uid_client}`)
+      fetch(`http://ssrv5.sednove.com:4000/address/add?one=${one}&one_val=${one_val}&uid_client=${this.state.project.uid_client}`)
       .then(response => response.json())
       .then(response => {
         alert(response.data.uid_address)
@@ -173,7 +173,7 @@ class Project extends Component
     }
   }
   getServices(){
-    fetch('http://localhost:4000/services')
+    fetch('http://ssrv5.sednove.com:4000/services')
     .then(response => response.json())
     .then(response => this.setStateObjects("services", response.data))
     .then(()=>{
@@ -183,13 +183,13 @@ class Project extends Component
   }
   getSubServices(){
     if(this.state.project.uid_service !== undefined)
-      fetch('http://localhost:4000/subservices?uid_service='+this.state.project.uid_service)
+      fetch('http://ssrv5.sednove.com:4000/subservices?uid_service='+this.state.project.uid_service)
       .then(response => response.json())
       .then(response => this.setStateObjects("subservices", response.data))
       .catch(err => alert(err))
   }
   getNewSubServices(uid){
-      fetch('http://localhost:4000/subservices?uid_service='+uid)
+      fetch('http://ssrv5.sednove.com:4000/subservices?uid_service='+uid)
       .then(response => response.json())
       .then(response => this.setStateObjects("subservices", response.data))
       .then(response => {this.setStateValue(this.state.project, "project", "uid_service", uid);document.getElementById("subservice_"+this.state.uid_project).value="0"})
@@ -198,20 +198,20 @@ class Project extends Component
   }
   getServiceQuestions(){
     this.state.service_questions = []
-    fetch('http://localhost:4000/service_questions?uid_service='+this.state.project.uid_service)
+    fetch('http://ssrv5.sednove.com:4000/service_questions?uid_service='+this.state.project.uid_service)
     .then(response => response.json())
     .then(response => this.setStateObjects("service_questions", response.data))
     .catch(err => alert(err))
   }
   getCancelReasons(){
-    fetch('http://localhost:4000/projects/get_cancel_reasons')
+    fetch('http://ssrv5.sednove.com:4000/projects/get_cancel_reasons')
     .then(response => response.json())
     .then(response => this.setStateObjects("cancel_reasons", response.data))
     .catch(err => alert(err))
   }
   activateProject(){
     if(this.state.project.status !== "active")
-      fetch('http://localhost:4000/projects/activate?uid='+this.state.uid_project)
+      fetch('http://ssrv5.sednove.com:4000/projects/activate?uid='+this.state.uid_project)
       .then(() => {
         console.log("(TODO) automail::projectActivatedClient(uid) or projectActivatedEmpoyee(uid) then automail::projectActivatedAdmin(uid)");
         this.getProject(this.state.uid_project);
@@ -224,7 +224,7 @@ class Project extends Component
   }
   cancelProject(){
     if(this.state.project.status !== "cancelled-before-qualification" && this.state.project.status !== "cancelled-after-qualification")
-      fetch(`http://localhost:4000/projects/cancel?uid=${this.state.uid_project}&status=${this.state.project.status}&uid_cancel_reason=${(this.state.uid_cancel_reason === undefined)?"0":this.state.uid_cancel_reason}
+      fetch(`http://ssrv5.sednove.com:4000/projects/cancel?uid=${this.state.uid_project}&status=${this.state.project.status}&uid_cancel_reason=${(this.state.uid_cancel_reason === undefined)?"0":this.state.uid_cancel_reason}
       &message=${this.state.message_cancel_reason}&uid_client=${this.state.project.uid_client}&uid_user=${this.state.uid_user}`)
       .then(() => {
         console.log("(TODO) automail::projectCanceled(uid)");
@@ -261,7 +261,7 @@ class Project extends Component
     this.sendQuestionsEmail("clientsProjectQuestions", uid_questions)
   }
   sendQuestionsEmail(name, uid_questions){
-    fetch(`http://localhost:4000/nodemailer/sendquestions?uid_client=${this.state.project.uid_client}&uid_questions=${uid_questions}&uid_service=${this.state.project.uid_service}
+    fetch(`http://ssrv5.sednove.com:4000/nodemailer/sendquestions?uid_client=${this.state.project.uid_client}&uid_questions=${uid_questions}&uid_service=${this.state.project.uid_service}
     &message=${this.state.message_question}&name=${name}`)
     .then(() => {
       this.addHistory("2", "");
@@ -270,7 +270,7 @@ class Project extends Component
     .catch(err => alert(err))
   }
   addHistory(uid_msg, comments){
-    fetch(`http://localhost:4000/client_history/add?uid_msg=${uid_msg}&uid_client=${this.state.project.uid_client}&uid_project=${this.state.uid_project}
+    fetch(`http://ssrv5.sednove.com:4000/client_history/add?uid_msg=${uid_msg}&uid_client=${this.state.project.uid_client}&uid_project=${this.state.uid_project}
     &username=${this.state.username}&comments=${comments}`)
     .then(() => {
       this.props.onReloadHistory(true)
@@ -290,7 +290,7 @@ class Project extends Component
     this.saveAjax("sr_project", this.state.uid_project, "description", content)
   } 
   getPrice(uid){
-    fetch('http://localhost:4000/subservices/get?uid='+uid)
+    fetch('http://ssrv5.sednove.com:4000/subservices/get?uid='+uid)
     .then(response => response.json())
     .then(response => {
       this.setStateValue(this.state.project, "project", "lead_price", response.data[0].lead_price)
@@ -357,14 +357,14 @@ class Project extends Component
     var comment_callbacklater = document.getElementById("comment_callbacklater").value;
     var call_back_date = date_callbacklater + " " + time_callbacklater + ":00";
     if(this.state.callbacklater === undefined){
-      fetch(`http://localhost:4000/callbacklater/add?uid_project=${this.state.uid_project}&uid_client=${this.state.project.uid_client}&call_back_date=${call_back_date}&followup_agent=${this.state.username}&comments=${comment_callbacklater}`)
+      fetch(`http://ssrv5.sednove.com:4000/callbacklater/add?uid_project=${this.state.uid_project}&uid_client=${this.state.project.uid_client}&call_back_date=${call_back_date}&followup_agent=${this.state.username}&comments=${comment_callbacklater}`)
       .then(() => {
         this.addHistory("3", "")
         this.setState({ popup_open_call_back_later: false })
       })
       .catch(err => alert(err))
     }else{
-      fetch(`http://localhost:4000/callbacklater/update?uid_project=${this.state.uid_project}&uid_client=${this.state.project.uid_client}&call_back_date=${call_back_date}&followup_agent=${this.state.username}&comments=${comment_callbacklater}`)
+      fetch(`http://ssrv5.sednove.com:4000/callbacklater/update?uid_project=${this.state.uid_project}&uid_client=${this.state.project.uid_client}&call_back_date=${call_back_date}&followup_agent=${this.state.username}&comments=${comment_callbacklater}`)
       .then(() => {
         this.addHistory("3", "")
         this.setState({ popup_open_call_back_later: false })
@@ -373,7 +373,7 @@ class Project extends Component
     }
   }
   getCallBackLater(){
-    fetch(`http://localhost:4000/callbacklater/get?uid_project=${this.state.uid_project}`)
+    fetch(`http://ssrv5.sednove.com:4000/callbacklater/get?uid_project=${this.state.uid_project}`)
     .then(response => response.json())
     .then(response => {
       this.setStateObject("callbacklater", response.data[0])
@@ -382,7 +382,7 @@ class Project extends Component
   }
   flagForReview(){
     if(this.state.flagforreview !== "1"){
-      fetch(`http://localhost:4000/flagforreview/update?uid_project=${this.state.uid_project}&followup_agent=${this.state.username}`)
+      fetch(`http://ssrv5.sednove.com:4000/flagforreview/update?uid_project=${this.state.uid_project}&followup_agent=${this.state.username}`)
       .then(() => {
         //this.addHistory("3", "")
         this.setState({ popup_open_flag_for_review: false, flagforreview: 1 })
@@ -391,7 +391,7 @@ class Project extends Component
     }
   }
   getFlagForReview(){
-    fetch(`http://localhost:4000/flagforreview/get?uid_project=${this.state.uid_project}`)
+    fetch(`http://ssrv5.sednove.com:4000/flagforreview/get?uid_project=${this.state.uid_project}`)
     .then(response => response.json())
     .then(response => {
       this.setState({flagforreview: response.data[0].flag_for_review})
@@ -402,7 +402,7 @@ class Project extends Component
     window.open("https://www.google.com/maps/place/"+this.state.complete_address, '_blank');
   }
   duplicateProject(){
-    fetch('http://localhost:4000/projects/duplicate?uid='+this.state.project.uid)
+    fetch('http://ssrv5.sednove.com:4000/projects/duplicate?uid='+this.state.project.uid)
     .then(() => {
       var url = window.location.href.split('?')[0] + "?uid_client=" + this.state.project.uid_client
       window.location.href = url;

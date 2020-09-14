@@ -54,7 +54,7 @@ class History extends Component {
     this.setState(actual_state);
   }
   saveAjax(table, uid, one, one_val){
-    fetch(`http://localhost:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
+    fetch(`http://ssrv5.sednove.com:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
     .then(response => response.json())
     .catch(err => console.log(err))
   }
@@ -67,13 +67,13 @@ class History extends Component {
   }
 
   addHistory(uid_msg, comments){
-    fetch(`http://localhost:4000/client_history/add?uid_msg=${uid_msg}&uid_client=${this.state.project.uid_client}&uid_project=${this.state.uid_project}
+    fetch(`http://ssrv5.sednove.com:4000/client_history/add?uid_msg=${uid_msg}&uid_client=${this.state.project.uid_client}&uid_project=${this.state.uid_project}
     &username=${this.state.username}&comments=${comments}`)
     .catch(err => alert.log(err))
   }
   getHistory(uid){
     this.state.history = []
-    fetch(`http://localhost:4000/client_history/get_by_client?uid_client=${uid}&lg=fr`)
+    fetch(`http://ssrv5.sednove.com:4000/client_history/get_by_client?uid_client=${uid}&lg=fr`)
     .then(response => response.json())
     .then(response => this.setStateObjects("history", response.data))
     .catch(err => console.log(err))

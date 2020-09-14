@@ -65,12 +65,12 @@ class Client extends Component {
         this.setState(actual_state);
     }
     saveAjax(table, uid, one, one_val){
-        fetch(`http://localhost:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
+        fetch(`http://ssrv5.sednove.com:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
         .then(response => response.json())
         .catch(err => console.log(err))
     }
     getClient = (uid) => {
-        fetch('http://localhost:4000/clients/get?uid='+uid)
+        fetch('http://ssrv5.sednove.com:4000/clients/get?uid='+uid)
         .then(response => response.json())
         .then(response => {
             if (response.data[0] !== undefined){
@@ -84,7 +84,7 @@ class Client extends Component {
         .catch(err => alert(err))
     }
     getPhone(){
-        fetch('http://localhost:4000/client_phone?uid_client='+this.state.uid_client)
+        fetch('http://ssrv5.sednove.com:4000/client_phone?uid_client='+this.state.uid_client)
         .then(response => response.json())
         .then(response => this.setState({ phone: response.data[0].phone1, uid_address: response.data[0].uid}))
         .catch(err => console.log(err))
