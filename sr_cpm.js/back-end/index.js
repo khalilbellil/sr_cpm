@@ -1,29 +1,59 @@
 const express = require('express')
 const cors = require('cors')
+const fileUpload = require('express-fileupload');
+const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const _ = require('lodash');
 const mysql = require('mysql')
 const nodemailer = require('nodemailer');
 const { format } = require('date-fns');
 
 const app = express()
-//#region Database Config
-const connection = mysql.createConnection({
-    // host: 'localhost',
-    // user: 'root',
-    // password: 'Kookie&09',
-    // database: 'sr_test'
-    host: 'soumissionrenovation.ca',
-    user: 'khalilbellil',
-    password: 'NPVVTsDdPwf7TTzfWAQj3QNBvsZ478oxuu4M3cB2j7xLDq7HBw',
-    database: 'srv5'
+
+//#region Database config
+var connection = mysql.createPool({
+    connectionLimit: 10,
+    host: 'localhost',
+    user: 'root',
+    password: 'Kookie&09',
+    database: 'sr_test'
+    // host: 'soumissionrenovation.ca',
+    // user: 'khalilbellil',
+    // password: 'NPVVTsDdPwf7TTzfWAQj3QNBvsZ478oxuu4M3cB2j7xLDq7HBw',
+    // database: 'srv5'
 })
 //#endregion
-connection.connect(err => {
-    if(err) {
-        return err;
+connection.getConnection((err, connection) => {
+    if (err) {
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            console.error('Database connection was closed.')
+        }
+        if (err.code === 'ER_CON_COUNT_ERROR') {
+            console.error('Database has too many connections.')
+        }
+        if (err.code === 'ECONNREFUSED') {
+            console.error('Database connection was refused.')
+        }
     }
+    if (connection) connection.release()
+    return
 })
+module.exports = connection
+
+// enable files upload
+app.use(fileUpload({
+    createParentPath: true,
+    limits: { 
+        fileSize: 2 * 1024 * 1024 * 1024 //2MB max file(s) size
+    }
+}))
+// make all files of directory "uploads" publicly accessible from root url
+app.use(express.static('uploads'));
 
 app.use(cors())
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: true}))
+app.use(morgan('dev'))
 
 //#region Toolbox
 function stringReturnIfNull(string, result_if_null){
@@ -290,6 +320,7 @@ app.get('/projects/get_by_client', (req, res) => {
         if(err) {
             return res.send(err)
         } else {
+            
             return res.json({
                 data: result
             })
@@ -585,6 +616,20 @@ app.get('/address', (req, res) => {
         }
     })
 })
+app.get('/address/add', (req, res) => {
+    const{ one, one_val, uid_client } = req.query
+    const ADD_QUERY = `INSERT INTO sr_address(sn_cdate, sn_mdate, ${one}, uid_client) VALUES(NOW(), NOW(), '${one_val}', '${uid_client}')`
+    connection.query(ADD_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            console.log(result.insertId)
+            return res.json({
+                data: {uid_address: result.insertId}
+            })
+        }
+    })
+})
 app.get('/service_questions', (req, res) => {
     const{ uid_service } = req.query
     const SELECT_ALL_QUERY = `SELECT * FROM sr_service_question WHERE uid_service=${uid_service} AND active="yes"`
@@ -754,6 +799,38 @@ app.get('/nodemailer/sendquestions', (req, res) => {
             })
         }
     })
+})
+//#endregion
+
+//#region Upload File
+app.post('/upload-file', async (req, res) => {
+    try {
+        if(!req.files) {
+            res.send({
+                status: false,
+                message: 'No file uploaded'
+            });
+        } else {
+            //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
+            let avatar = req.files.avatar;
+            
+            //Use the mv() method to place the file in upload directory (i.e. "uploads")
+            avatar.mv('./uploads/' + avatar.name);
+
+            //send response
+            res.send({
+                status: true,
+                message: 'File is uploaded',
+                data: {
+                    name: avatar.name,
+                    mimetype: avatar.mimetype,
+                    size: avatar.size
+                }
+            });
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
 })
 //#endregion
 

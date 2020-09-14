@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
 import Cpm from './components/Cpm';
+import UploadFile from './components/UploadFile';
+import AddressAutoComplete from './components/AddressAutoComplete';
 
 class App extends Component {
   state = {

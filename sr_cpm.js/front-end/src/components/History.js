@@ -73,8 +73,7 @@ class History extends Component {
   }
   getHistory(uid){
     this.state.history = []
-    fetch(`http://localhost:4000/client_history/get_by_client?uid_client=${uid}
-    &lg=fr`)
+    fetch(`http://localhost:4000/client_history/get_by_client?uid_client=${uid}&lg=fr`)
     .then(response => response.json())
     .then(response => this.setStateObjects("history", response.data))
     .catch(err => console.log(err))

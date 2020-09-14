@@ -109,40 +109,68 @@ class Project extends Component
     .then(() => {this.getSubServices()})
     .then(() => {this.getAddress()})
     .then(() => {
-      this.setStateValue(this.state.project, "project", "delay_from", format(new Date(this.state.project.delay_from), 'yyyy-MM-dd'))
-      this.setStateValue(this.state.project, "project", "delay_to", format(new Date(this.state.project.delay_to), 'yyyy-MM-dd'))
-      this.setStateValue(this.state.project, "project", "sn_cdate", format(new Date(this.state.project.sn_cdate), 'yyyy-MM-dd hh:mm:ss a'))
-      var count = 0;
-      if (this.state.project.file1 !== undefined && this.state.project.file1 !== null){
-        count ++;
+      if(this.state.project.delay_from !== undefined && this.state.project.delay_from !== null && this.state.project.delay_from !== "0000-00-00"){
+        this.setStateValue(this.state.project, "project", "delay_from", format(new Date(this.state.project.delay_from), 'yyyy-MM-dd'))
       }
-      if (this.state.project.file2 !== undefined && this.state.project.file2 !== null){
-        count ++;
+      if(this.state.project.delay_to !== undefined && this.state.project.delay_to !== null && this.state.project.delay_to !== "0000-00-00"){
+        this.setStateValue(this.state.project, "project", "delay_to", format(new Date(this.state.project.delay_to), 'yyyy-MM-dd'))
       }
-      if (this.state.project.file3 !== undefined && this.state.project.file3 !== null){
-        count ++;
+      if(this.state.project.sn_cdate !== undefined && this.state.project.sn_cdate !== null && this.state.project.sn_cdate !== "0000-00-00"){
+        this.setStateValue(this.state.project, "project", "sn_cdate", format(new Date(this.state.project.sn_cdate), 'yyyy-MM-dd hh:mm:ss a'))
       }
-      if (this.state.project.file4 !== undefined && this.state.project.file4 !== null){
-        count ++;
-      }
-      if (this.state.project.file5 !== undefined && this.state.project.file5 !== null){
-        count ++;
-      }
-      this.setState({nb_files: count})
+      this.countFiles()
     })
     .then(() => this.getCallBackLater())
     .then(() => this.getFlagForReview())
     .then(() => this.getCancelReasons())
-    .catch(err => alert(err))
+    .catch(err => alert("getProject, err: " + err))
+  }
+  countFiles(){
+    var count = 0;
+    if (this.state.project.file1 !== undefined && this.state.project.file1 !== null && this.state.project.file1 !== ""){
+      count ++;
+    }
+    if (this.state.project.file2 !== undefined && this.state.project.file2 !== null && this.state.project.file2 !== ""){
+      count ++;
+    }
+    if (this.state.project.file3 !== undefined && this.state.project.file3 !== null && this.state.project.file3 !== ""){
+      count ++;
+    }
+    if (this.state.project.file4 !== undefined && this.state.project.file4 !== null && this.state.project.file4 !== ""){
+      count ++;
+    }
+    if (this.state.project.file5 !== undefined && this.state.project.file5 !== null && this.state.project.file5 !== ""){
+      count ++;
+    }
+    this.setState({nb_files: count})
   }
   getAddress(){
     fetch('http://localhost:4000/address?uid='+this.state.project.uid_address)
     .then(response => response.json())
-    .then(response => this.setStateObject("address", response.data[0]))
-    .then(() => {
-      this.setState({complete_address: this.state.address.street_no + " " +this.state.address.street + " " + this.state.address.city + " " + this.state.address.province + " " + this.state.address.zip})
+    .then(response => {
+      if (response.data[0] !== undefined){
+        this.setStateObject("address", response.data[0])
+        this.setState({complete_address: this.state.address.street_no + " " +this.state.address.street + " " + this.state.address.city + " " + this.state.address.province + " " + this.state.address.zip})
+      }
     })
     .catch(err => alert(err))
+  }
+  saveAjaxAddress(table, uid, one, one_val){
+    if (this.state.address.uid !== undefined){
+      fetch(`http://localhost:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
+      .then(response => response.json())
+      .catch(err => console.log(err))
+    }else{
+      fetch(`http://localhost:4000/address/add?one=${one}&one_val=${one_val}&uid_client=${this.state.project.uid_client}`)
+      .then(response => response.json())
+      .then(response => {
+        alert(response.data.uid_address)
+        this.setStateValue(this.state.project, "project", "uid_address", response.data.uid_address);
+        this.saveAjax("sr_project", this.state.uid_project, "uid_address", response.data.uid_address)
+        this.getAddress()
+      })
+      .catch(err => console.log(err))
+    }
   }
   getServices(){
     fetch('http://localhost:4000/services')
@@ -282,36 +310,36 @@ class Project extends Component
       edate.setDate(edate.getDate() + 10);
       delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2)
       delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2)
-    }else if(filter === 2){
+    }else if(filter === "2"){
         edate.setDate(sdate.getDate() + 15);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter === 3){
+    }else if(filter === "3"){
         sdate.setDate(sdate.getDate() + 0);
         edate.setDate(edate.getDate() + 30);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter === 4){
+    }else if(filter === "4"){
         sdate.setDate(sdate.getDate() + 0);
         edate.setDate(edate.getDate() + 60);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter === 5){
+    }else if(filter === "5"){
         sdate.setDate(sdate.getDate() + 0);
         edate.setDate(edate.getDate() + 130);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter === 6){
+    }else if(filter === "6"){
         sdate.setDate(sdate.getDate() + 180);
         edate.setDate(edate.getDate() + 365);
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter === 7){
+    }else if(filter === "7"){
         sdate.setDate(sdate.getDate() + 365);
         edate.setDate(edate.getDate() + 1000)
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
-    }else if(filter === 8){
+    }else if(filter === "8"){
         edate.setDate(edate.getDate() + 90)
         delay_from = sdate.getFullYear() + '-' + ('0' + (sdate.getMonth() + 1)).slice(-2) + '-' + ('0' + sdate.getDate()).slice(-2);
         delay_to = edate.getFullYear() + '-' + ('0' + (edate.getMonth() + 1)).slice(-2) + '-' + ('0' + edate.getDate()).slice(-2);
@@ -778,7 +806,6 @@ class Project extends Component
                     <Input type="phone" name="phone2" value={this.state.address.phone2} onChange={(val)=>{this.setStateValue(this.state.address, "address", "phone2", val.target.value);this.saveAjax("sr_address",this.state.address.uid,"phone2",val.target.value);}}/>
                   </Col>
                 </FormGroup>
-                
                 <FormGroup>
                   <Label for="complete_address">Adresse*</Label>
                   <Input type="text" name="complete_address" value={this.state.complete_address} onChange={(val)=>{this.setState({complete_address: val.target.value})}}/>
@@ -786,20 +813,20 @@ class Project extends Component
                 <FormGroup className="row">
                   <Col>
                     <Label for="street_no">No. de rue*</Label>
-                    <Input type="text" name="street_no" value={this.state.address.street_no} onChange={(val)=>{this.setStateValue(this.state.address, "address", "street_no", val.target.value);this.saveAjax("sr_address",this.state.address.uid,"street_no",val.target.value);}}/>
+                    <Input type="text" name="street_no" value={this.state.address.street_no} onChange={(val)=>{this.setStateValue(this.state.address, "address", "street_no", val.target.value);this.saveAjaxAddress("sr_address",this.state.address.uid,"street_no",val.target.value);}}/>
                   </Col>
                   <Col>
                     <Label for="street">Rue*</Label>
-                    <Input type="text" name="street" value={this.state.address.street} onChange={(val)=>{this.setStateValue(this.state.address, "address", "street", val.target.value);this.saveAjax("sr_address",this.state.address.uid,"street",val.target.value);}}/>
+                    <Input type="text" name="street" value={this.state.address.street} onChange={(val)=>{this.setStateValue(this.state.address, "address", "street", val.target.value);this.saveAjaxAddress("sr_address",this.state.address.uid,"street",val.target.value);}}/>
                   </Col>
                 </FormGroup>
                 <FormGroup>
                   <Label for="zip">Code postal*</Label>
-                  <Input type="text" name="zip" value={this.state.address.zip} onChange={(val)=>{this.setStateValue(this.state.address, "address", "zip", val.target.value);this.saveAjax("sr_address",this.state.address.uid,"zip",val.target.value);}}/>
+                  <Input type="text" name="zip" value={this.state.address.zip} onChange={(val)=>{this.setStateValue(this.state.address, "address", "zip", val.target.value);this.saveAjaxAddress("sr_address",this.state.address.uid,"zip",val.target.value);}}/>
                 </FormGroup>
                 <FormGroup>
                   <Label for="uid_city">Ville*</Label>
-                  <Input type="select" name="uid_city" value={this.state.address.uid_city} onChange={(val)=>{this.setStateValue(this.state.address, "address", "uid_city", val.target.value);this.saveAjax("sr_address",this.state.address.uid,"uid_city",val.target.value);}}>
+                  <Input type="select" name="uid_city" value={this.state.address.uid_city} onChange={(val)=>{this.setStateValue(this.state.address, "address", "uid_city", val.target.value);this.saveAjaxAddress("sr_address",this.state.address.uid,"uid_city",val.target.value);}}>
                       <option value="0">Choisir une ville</option>
                       <option value="27">Mascouche</option>
                   </Input>
