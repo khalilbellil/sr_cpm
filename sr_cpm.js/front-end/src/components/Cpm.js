@@ -63,7 +63,7 @@ class Cpm extends Component {
     this.setState(actual_state);
   }
   saveAjax(table, uid, one, one_val){
-    fetch(`http://localhost:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
+    fetch(`http://ssrv5.sednove.com:4000/update/one?table=${table}&uid=${uid}&one=${one}&one_val=${one_val}`)
     .then(response => response.json())
     .catch(err => console.log(err))
   }
@@ -81,13 +81,13 @@ class Cpm extends Component {
   }
   getClientProjectsUids(uid){
     this.state.uids_projects = []
-    fetch('http://localhost:4000/client/get_projects?uid_client='+uid)
+    fetch('http://ssrv5.sednove.com:4000/client/get_projects?uid_client='+uid)
     .then(response => response.json())
     .then(response => this.setStateObjects("uids_projects", response.data))
     .catch(err => alert(err))
   }
   createProject(){
-    fetch('http://localhost:4000/projects/new?uid_client='+this.state.uid_client)
+    fetch('http://ssrv5.sednove.com:4000/projects/new?uid_client='+this.state.uid_client)
     .then(() => {
       this.setState({reload_history: true})
       this.unlockClient()
@@ -97,7 +97,7 @@ class Cpm extends Component {
   }
   lockClient(uid_client){
     if(uid_client !== undefined){
-      fetch(`http://localhost:4000/clients/lock?uid_client=${uid_client}&origin=gestion-client&username=${this.state.username}`)
+      fetch(`http://ssrv5.sednove.com:4000/clients/lock?uid_client=${uid_client}&origin=gestion-client&username=${this.state.username}`)
       .then(response => response.json())
       .then(response => {
         (response.data.already_locked === "no")?this.getClientProjectsUids(uid_client):alert("Client déjà verrouillé")
@@ -107,11 +107,11 @@ class Cpm extends Component {
     }
   }
   unlockClient(){
-    fetch(`http://localhost:4000/clients/unlock?origin=gestion-client&username=${this.state.username}`)
+    fetch(`http://ssrv5.sednove.com:4000/clients/unlock?origin=gestion-client&username=${this.state.username}`)
     .catch(err => alert(err))
   }
   getNextClient(){
-    fetch(`http://localhost:4000/clients/get_next_client?username=${this.state.username}&origin=gestion-client&lg=fr`)
+    fetch(`http://ssrv5.sednove.com:4000/clients/get_next_client?username=${this.state.username}&origin=gestion-client&lg=fr`)
     .then(response => response.json())
     .then(response => {
       if (response.data.found !== "no"){
