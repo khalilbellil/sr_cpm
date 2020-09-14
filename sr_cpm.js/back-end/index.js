@@ -13,14 +13,14 @@ const app = express()
 //#region Database config
 var connection = mysql.createPool({
     connectionLimit: 10,
-    host: 'localhost',
-    user: 'root',
-    password: 'Kookie&09',
-    database: 'sr_test'
-    // host: 'soumissionrenovation.ca',
-    // user: 'khalilbellil',
-    // password: 'NPVVTsDdPwf7TTzfWAQj3QNBvsZ478oxuu4M3cB2j7xLDq7HBw',
-    // database: 'srv5'
+    // host: 'localhost',
+    // user: 'root',
+    // password: 'Kookie&09',
+    // database: 'sr_test'
+    host: 'soumissionrenovation.ca',
+    user: 'khalilbellil',
+    password: 'NPVVTsDdPwf7TTzfWAQj3QNBvsZ478oxuu4M3cB2j7xLDq7HBw',
+    database: 'srv5'
 })
 //#endregion
 connection.getConnection((err, connection) => {
