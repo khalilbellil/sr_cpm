@@ -1,0 +1,4 @@
+Le serveur roule sur le port 4000
+(node:30356) [DEP0126] DeprecationWarning: timers.active() is deprecated. Please use timeout.refresh() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:30356) [DEP0096] DeprecationWarning: timers.unenroll() is deprecated. Please use clearTimeout instead.
