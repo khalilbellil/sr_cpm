@@ -5,10 +5,10 @@ const mysql = require('mysql')
 const app = express()
 //#region Database Config
 const connection = mysql.createConnection({
-    host: 'blackwidow',
-    user: 'khalilbellil',
-    password: 'NSVTTsddPwf7TTzfWOWj3QNBvsZ478oxuu4M3cB217xLDq7HBA',
-    database: 'srv5'
+    host: 'localhost',
+    user: 'root',
+    password: 'Kookie&09',
+    database: 'sr_test'
 })
 //#endregion
 connection.connect(err => {
