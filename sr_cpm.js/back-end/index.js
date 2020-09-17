@@ -772,14 +772,30 @@ app.get('/get_zipcode', (req, res) => {
 app.get('/client_info/nb_project', (req, res) => {
 	const{ uid_client } = req.query
 	const QUERY = `SELECT count(uid) as nb_project FROM sr_project WHERE uid_client='${uid_client}'`
-	connection.query(QUERY, (err, result) => {
+	connection.query(QUERY, (err, result1) => {
 		if(err) {
 			console.log("err: "+err)
 			return res.send(err)
 		} else {
-			return res.json({
-				data: result[0]
-			})
+			const QUERY = `SELECT count(uid) as nb_activated_project FROM sr_project WHERE uid_client='${uid_client}' AND status NOT IN('cancelled-before-qualification','cancelled-after-qualification','new')`
+            connection.query(QUERY, (err, result2) => {
+                if(err) {
+                    console.log("err: "+err)
+                    return res.send(err)
+                } else {
+                    const QUERY = `SELECT count(uid) as nb_canceled_project FROM sr_project WHERE uid_client='${uid_client}' AND status IN('cancelled-before-qualification','cancelled-after-qualification')`
+                    connection.query(QUERY, (err, result3) => {
+                        if(err) {
+                            console.log("err: "+err)
+                            return res.send(err)
+                        } else {
+                            return res.json({
+                                data: {nb_project: result1[0].nb_project, nb_activated_project: result2[0].nb_activated_project, nb_canceled_project: result3[0].nb_canceled_project}
+                            })
+                        }
+                    })
+                }
+            })
 		}
 	})
 })
