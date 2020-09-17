@@ -769,13 +769,55 @@ app.get('/get_zipcode', (req, res) => {
 		return res.send(err)
 	})
 })
+app.get('/client_info/nb_project', (req, res) => {
+	const{ uid_client } = req.query
+	const QUERY = `SELECT count(uid) as nb_project FROM sr_project WHERE uid_client='${uid_client}'`
+	connection.query(QUERY, (err, result) => {
+		if(err) {
+			console.log("err: "+err)
+			return res.send(err)
+		} else {
+			return res.json({
+				data: result[0]
+			})
+		}
+	})
+})
+app.get('/client_info/nb_activated_project', (req, res) => {
+	const{ uid_client } = req.query
+	const QUERY = `SELECT count(uid) as nb_activated_project FROM sr_project WHERE uid_client='${uid_client}' AND status NOT IN('cancelled-before-qualification','cancelled-after-qualification','new')`
+	connection.query(QUERY, (err, result) => {
+		if(err) {
+			console.log("err: "+err)
+			return res.send(err)
+		} else {
+			return res.json({
+				data: result[0]
+			})
+		}
+	})
+})
+app.get('/client_info/nb_canceled_project', (req, res) => {
+	const{ uid_client } = req.query
+	const QUERY = `SELECT count(uid) as nb_canceled_project FROM sr_project WHERE uid_client='${uid_client}' AND status IN('cancelled-before-qualification','cancelled-after-qualification')`
+	connection.query(QUERY, (err, result) => {
+		if(err) {
+			console.log("err: "+err)
+			return res.send(err)
+		} else {
+			return res.json({
+				data: result[0]
+			})
+		}
+	})
+})
 //#endregion
 
 //#region NODEMAILER
 let transporter = nodemailer.createTransport({
     //host: 'mail.smtp2go.com', // <= your smtp server here
     //port: 2525, // <= connection port
-    secure: true, // use SSL or not
+    //secure: true, // use SSL or not
     //auth: {
     //   user: 'soumissionrenovation.ca', // <= smtp login user
     //   pass: 'AVxHxsYk7xhw' // <= smtp login pass
