@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 import Cpm from './components/Cpm';
 import UploadFile from './components/UploadFile';
-import AddressAutoComplete from './components/AddressAutoComplete';
+import {PlacesAutocomplete} from './components/PlacesAutocomplete'
 
 class App extends Component {
   state = {
@@ -10,13 +10,12 @@ class App extends Component {
   }
 
   componentDidMount(){
-    
   }
 
   render() {
     return (
       <div className="App container-fluid" style={{width:"100%"}}>
-        <Cpm />
+        <PlacesAutocomplete />
       </div>
     );
   }

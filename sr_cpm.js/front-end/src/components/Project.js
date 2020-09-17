@@ -17,6 +17,8 @@ import { format } from 'date-fns';
 import Popup from "reactjs-popup";
 import $ from "jquery";
 import "../styles/cpm.css";
+import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete";
+import useOnclickOutside from "react-cool-onclickoutside";
 
 class Project extends Component 
 {
@@ -695,7 +697,9 @@ class Project extends Component
                 </FormGroup>
                 <FormGroup>
                   <Label for="service">Service*</Label>
-                  <Input type="select" name="service" value={this.state.project.uid_service} onChange={(val)=>{this.setStateValue(this.state.project, "project", "uid_service", val.target.value);this.saveAjax("sr_project",this.state.uid_project,"uid_service",val.target.value);this.getNewSubServices(val.target.value);}}>
+                  <Input type="select" name="service" value={this.state.project.uid_service} 
+                  onChange={(val)=>{this.setStateValue(this.state.project, "project", "uid_service", val.target.value);
+                  this.saveAjax("sr_project",this.state.uid_project,"uid_service",val.target.value);this.getNewSubServices(val.target.value);}}>
                     <option value="0">Choisir un service</option>
                     {this.state.services.map((s, i) =>
                     (
