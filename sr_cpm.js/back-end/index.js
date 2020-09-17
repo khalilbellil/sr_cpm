@@ -638,8 +638,8 @@ app.get('/address/add', (req, res) => {
     })
 })
 app.get('/address/save', (req, res) => {
-	const{ uid_client, street_no, street, city, province, country } = req.query
-	const ADD_QUERY = `INSERT INTO sr_address(sn_cdate, sn_mdate, uid_client, street_no, street, city, province, country) VALUES(NOW(), NOW(), '${uid_client}', '${street_no}', '${street}', '${city}', '${province}', '${country}')`
+	const{ uid_client, street_no, street, city, province, country, phone1, phone2 } = req.query
+	const ADD_QUERY = `INSERT INTO sr_address(sn_cdate, sn_mdate, uid_client, street_no, street, city, province, country, phone1, phone2) VALUES(NOW(), NOW(), '${uid_client}', '${street_no}', '${street}', '${city}', '${province}', '${country}', '${phone1}', '${phone2}')`
 	connection.query(ADD_QUERY, (err, result) => {
 	if(err) {
 		console.log(err)
