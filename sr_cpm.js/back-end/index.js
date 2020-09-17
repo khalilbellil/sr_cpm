@@ -557,7 +557,6 @@ app.get('/clients/unlock', (req, res) => {
 //#region search_client
 app.get('/clients/get_by_phone', (req, res) => {
     var { phone } = req.query
-    phone = phone.replace(":","")
     const GET_BY_ID_QUERY = `SELECT uid as uid_client FROM sr_client WHERE phone1='${phone}'`
     connection.query(GET_BY_ID_QUERY, (err, result) => {
         if(err) {
@@ -571,8 +570,6 @@ app.get('/clients/get_by_phone', (req, res) => {
 })
 app.get('/clients/get_by_project', (req, res) => {
     var { uid_project } = req.query
-    uid_project = uid_project.replace("#","")
-    console.log("PROJECT: "+uid_project)
     const GET_BY_ID_QUERY = `SELECT uid_client FROM sr_project WHERE uid='${uid_project}'`
     connection.query(GET_BY_ID_QUERY, (err, result) => {
         if(err) {
