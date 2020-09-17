@@ -1,0 +1,44 @@
+{
+  "name": "front-end",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.30",
+    "@fortawesome/free-solid-svg-icons": "^5.14.0",
+    "@fortawesome/react-fontawesome": "^0.1.11",
+    "@tinymce/tinymce-react": "^3.6.0",
+    "axios": "^0.20.0",
+    "babel-polyfill": "^6.26.0",
+    "bootstrap": "^4.0.0-alpha.6",
+    "date-fns": "^2.15.0",
+    "draft-js": "^0.11.7",
+    "formidable": "^1.2.2",
+    "jquery": "^3.5.1",
+    "react": "^16.13.1",
+    "react-addons-css-transition-group": "^15.6.0",
+    "react-addons-transition-group": "^15.6.0",
+    "react-bootstrap-table": "^4.3.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "^3.4.3",
+    "reactjs-popup": "^1.5.0",
+    "reactstrap": "^4.8.0"
+  },
+  "scripts": {
+    "start": "PORT=3001 react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
