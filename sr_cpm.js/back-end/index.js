@@ -555,9 +555,24 @@ app.get('/clients/unlock', (req, res) => {
 //#endregion
 
 //#region search_client
-app.get('/clients/get', (req, res) => {
-    const{ uid } = req.query
-    const GET_BY_ID_QUERY = `SELECT uid FROM sr_client WHERE phone1='${uid}'`
+app.get('/clients/get_by_phone', (req, res) => {
+    var { phone } = req.query
+    phone = phone.replace(":","")
+    const GET_BY_ID_QUERY = `SELECT uid FROM sr_client WHERE phone1='${phone}'`
+    connection.query(GET_BY_ID_QUERY, (err, result) => {
+        if(err) {
+            return res.send(err)
+        } else {
+            return res.json({
+                data: result
+            })
+        }
+    })
+})
+app.get('/clients/get_by_project', (req, res) => {
+    var{ uid_project } = req.query
+    uid_project = uid_project.replace("#","")
+    const GET_BY_ID_QUERY = `SELECT uid_client FROM sr_project WHERE uid='${uid_project}'`
     connection.query(GET_BY_ID_QUERY, (err, result) => {
         if(err) {
             return res.send(err)
@@ -777,14 +792,14 @@ app.get('/client_info/nb_project', (req, res) => {
 			console.log("err: "+err)
 			return res.send(err)
 		} else {
-			const QUERY = `SELECT count(uid) as nb_activated_project FROM sr_project WHERE uid_client='${uid_client}' AND status NOT IN('cancelled-before-qualification','cancelled-after-qualification','new')`
-            connection.query(QUERY, (err, result2) => {
+			const QUERY2 = `SELECT count(uid) as nb_activated_project FROM sr_project WHERE uid_client='${uid_client}' AND status NOT IN('cancelled-before-qualification','cancelled-after-qualification','new')`
+            connection.query(QUERY2, (err, result2) => {
                 if(err) {
                     console.log("err: "+err)
                     return res.send(err)
                 } else {
-                    const QUERY = `SELECT count(uid) as nb_canceled_project FROM sr_project WHERE uid_client='${uid_client}' AND status IN('cancelled-before-qualification','cancelled-after-qualification')`
-                    connection.query(QUERY, (err, result3) => {
+                    const QUERY3 = `SELECT count(uid) as nb_canceled_project FROM sr_project WHERE uid_client='${uid_client}' AND status IN('cancelled-before-qualification','cancelled-after-qualification')`
+                    connection.query(QUERY3, (err, result3) => {
                         if(err) {
                             console.log("err: "+err)
                             return res.send(err)
@@ -796,34 +811,6 @@ app.get('/client_info/nb_project', (req, res) => {
                     })
                 }
             })
-		}
-	})
-})
-app.get('/client_info/nb_activated_project', (req, res) => {
-	const{ uid_client } = req.query
-	const QUERY = `SELECT count(uid) as nb_activated_project FROM sr_project WHERE uid_client='${uid_client}' AND status NOT IN('cancelled-before-qualification','cancelled-after-qualification','new')`
-	connection.query(QUERY, (err, result) => {
-		if(err) {
-			console.log("err: "+err)
-			return res.send(err)
-		} else {
-			return res.json({
-				data: result[0]
-			})
-		}
-	})
-})
-app.get('/client_info/nb_canceled_project', (req, res) => {
-	const{ uid_client } = req.query
-	const QUERY = `SELECT count(uid) as nb_canceled_project FROM sr_project WHERE uid_client='${uid_client}' AND status IN('cancelled-before-qualification','cancelled-after-qualification')`
-	connection.query(QUERY, (err, result) => {
-		if(err) {
-			console.log("err: "+err)
-			return res.send(err)
-		} else {
-			return res.json({
-				data: result[0]
-			})
 		}
 	})
 })
