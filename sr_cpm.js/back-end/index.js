@@ -557,7 +557,7 @@ app.get('/clients/unlock', (req, res) => {
 //#region search_client
 app.get('/clients/get_by_phone', (req, res) => {
     var { phone } = req.query
-    const GET_BY_ID_QUERY = `SELECT uid_client FROM sr_address WHERE phone1='${phone} OR phone2=${phone} ORDER BY uid DESC LIMIT 1`
+    const GET_BY_ID_QUERY = `SELECT uid_client FROM sr_address WHERE phone1='${phone}' OR phone2='${phone}' ORDER BY uid DESC LIMIT 1`
     connection.query(GET_BY_ID_QUERY, (err, result) => {
         if(err) {
             return res.send(err)
