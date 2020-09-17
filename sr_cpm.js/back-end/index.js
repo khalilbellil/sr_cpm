@@ -812,6 +812,20 @@ app.get('/client_info/nb_project', (req, res) => {
 		}
 	})
 })
+app.get('/get_dialer_prefix', (req, res) => {
+    const { first_digits } = req.query
+	const QUERY = `SELECT ext FROM sr_dialer_prefix WHERE first_digits='${first_digits}'`
+	connection.query(QUERY, (err, result) => {
+		if(err) {
+			console.log("err: "+err)
+			return res.send(err)
+		} else {
+			return res.json({
+				data: result
+			})
+		}
+	})
+})
 //#endregion
 
 //#region NODEMAILER
