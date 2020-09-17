@@ -7,6 +7,12 @@ const _ = require('lodash');
 const mysql = require('mysql')
 const nodemailer = require('nodemailer');
 const { format } = require('date-fns');
+const nodeGeocoder = require('node-geocoder');
+
+const options = {
+	provider: 'openstreetmap'
+}
+const geocoder = nodeGeocoder(options)
 
 const app = express()
 
@@ -621,7 +627,8 @@ app.get('/address/add', (req, res) => {
     const ADD_QUERY = `INSERT INTO sr_address(sn_cdate, sn_mdate, ${one}, uid_client) VALUES(NOW(), NOW(), '${one_val}', '${uid_client}')`
     connection.query(ADD_QUERY, (err, result) => {
         if(err) {
-            return res.send(err)
+            console.log(err)
+			return res.send(err)
         } else {
             console.log(result.insertId)
             return res.json({
@@ -629,6 +636,21 @@ app.get('/address/add', (req, res) => {
             })
         }
     })
+})
+app.get('/address/save', (req, res) => {
+	const{ uid_client, street_no, street, city, province, country } = req.query
+	const ADD_QUERY = `INSERT INTO sr_address(sn_cdate, sn_mdate, uid_client, street_no, street, city, province, country) VALUES(NOW(), NOW(), '${uid_client}', '${street_no}', '${street}', '${city}', '${province}', '${country}')`
+	connection.query(ADD_QUERY, (err, result) => {
+	if(err) {
+		console.log(err)
+		return res.send(err)
+	} else {
+		console.log("insertId: "+result.insertId)
+		return res.json({
+			data: {uid_address: result.insertId}
+		})
+	}
+	})
 })
 app.get('/service_questions', (req, res) => {
     const{ uid_service } = req.query
@@ -707,17 +729,59 @@ app.get('/flagforreview/get', (req, res) => {
         }
     })
 })
+app.get('/city', (req, res) => {
+	const QUERY = `SELECT uid, uid_territory, name_fr, name_en FROM sr_city WHERE active='yes' ORDER BY name_fr ASC`
+	connection.query(QUERY, (err, result) => {
+		if(err) {
+			console.log("err: "+err)
+			return res.send(err)
+		} else {
+			return res.json({
+				data: result
+			})
+		}
+	})
+})
+app.get('/city/get', (req, res) => {
+	const{ name } = req.query
+	const QUERY = `SELECT uid, uid_territory, name_fr, name_en FROM sr_city WHERE active='yes' AND name_en='${name}'`
+	connection.query(QUERY, (err, result) => {
+		if(err) {
+			console.log("err: "+err)
+			return res.send(err)
+		} else {
+			return res.json({
+				data: result
+			})
+		}
+	})
+})
+app.get('/get_zipcode', (req, res) => {
+	const{ address } = req.query
+	geocoder.geocode(address)
+	.then((result)=> {
+		return res.json({
+			data: result
+		})
+	})
+	.catch((err)=> {
+		console.log("err: "+err)
+		return res.send(err)
+	})
+})
 //#endregion
 
 //#region NODEMAILER
 let transporter = nodemailer.createTransport({
-    host: 'mail.smtp2go.com', // <= your smtp server here
-    port: 2525, // <= connection port
-    // secure: true, // use SSL or not
-    auth: {
-       user: 'soumissionrenovation.ca', // <= smtp login user
-       pass: 'AVxHxsYk7xhw' // <= smtp login pass
-    }
+    //host: 'mail.smtp2go.com', // <= your smtp server here
+    //port: 2525, // <= connection port
+    secure: true, // use SSL or not
+    //auth: {
+    //   user: 'soumissionrenovation.ca', // <= smtp login user
+    //   pass: 'AVxHxsYk7xhw' // <= smtp login pass
+    //}
+	host: '127.0.0.1',
+	port: 25
  });
 
 app.get('/nodemailer/send', (req, res) => {
