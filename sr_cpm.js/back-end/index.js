@@ -7,6 +7,7 @@ const _ = require('lodash');
 const mysql = require('mysql')
 const nodemailer = require('nodemailer');
 const { format } = require('date-fns');
+var getMonth = require('date-fns/getMonth');
 const nodeGeocoder = require('node-geocoder');
 
 const options = {
@@ -938,7 +939,7 @@ app.post('/upload-file', async (req, res) => {
             //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
             let avatar = req.files.avatar;
             var date_now = Date(Date.now())
-            var month = date_now.getMonth()
+            var month = getMonth(date_now)
             let upload_path = "./uploads/sn_uploads/fck2020/m_" + month + "/" + avatar.name
             console.log("PATH: "+upload_path)
             //Use the mv() method to place the file in upload directory (i.e. "uploads")
@@ -950,8 +951,8 @@ app.post('/upload-file', async (req, res) => {
                 status: true,
                 message: 'File is uploaded',
                 data: {
-                    name: avatar.name,
-                    path: upload_path
+                    // name: avatar.name,
+                    // path: upload_path
                 }
             });
         }
