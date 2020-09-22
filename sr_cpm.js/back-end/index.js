@@ -943,14 +943,20 @@ app.post('/upload-file', async (req, res) => {
             avatar.mv("./uploads" + upload_path);
 
             //send response
-            return res.send({
-                status: true,
-                message: 'File is uploaded',
-                data: {
+            // res.send({
+            //     status: true,
+            //     message: 'File is uploaded',
+            //     data: {
+            //         name: avatar.name,
+            //         path: upload_path
+            //     }
+            // });
+            return res.json({
+				data: {
                     name: avatar.name,
                     path: upload_path
                 }
-            });
+			})
         }
     } catch (err) {
         res.status(500).send(err);
