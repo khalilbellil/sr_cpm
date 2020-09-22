@@ -939,7 +939,7 @@ app.post('/upload-file', async (req, res) => {
             //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
             let avatar = req.files.avatar;
             var date_now = Date(Date.now())
-            var month = getMonth(Date.now())
+            var month = getMonth(Date.now()) + 1
             let upload_path = "./uploads/sn_uploads/fck2020/m_" + month + "/" + avatar.name
             console.log("PATH: "+upload_path)
             //Use the mv() method to place the file in upload directory (i.e. "uploads")
