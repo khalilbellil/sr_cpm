@@ -74,7 +74,6 @@ function stringReturnIfNull(string, result_if_null){
 //#region Save_ajax
 app.get('/update/one', (req, res) => {
     const{ table, uid, one, one_val } = req.query
-    console.log("ONE_VAL: " + decodeURI(one_val))
     const UPDATE_USER_QUERY = `UPDATE ${table} SET ${one}='${decodeURI(one_val)}' WHERE uid='${uid}'`
     connection.query(UPDATE_USER_QUERY, (err, result) => {
         if(err) {
@@ -935,13 +934,11 @@ app.post('/upload-file', async (req, res) => {
             });
             console.log("UPLOAD FAILED")
         } else {
-            //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
             let avatar = req.files.avatar;
             var month = getMonth(Date.now()) + 1
             let upload_path = "/sn_uploads/fck2020/m_" + month + "/" + avatar.name
 
-            //Use the mv() method to place the file in upload directory (i.e. "uploads")
-            //avatar.mv("./uploads" + upload_path);
+            avatar.mv("./uploads" + upload_path);//upload file in server
 
             //send response
             res.send({
@@ -952,7 +949,6 @@ app.post('/upload-file', async (req, res) => {
                     path: upload_path
                 }
             });
-            //res.send(upload_path)
         }
     } catch (err) {
         res.status(500).send(err);
