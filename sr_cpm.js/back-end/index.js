@@ -74,6 +74,7 @@ function stringReturnIfNull(string, result_if_null){
 //#region Save_ajax
 app.get('/update/one', (req, res) => {
     const{ table, uid, one, one_val } = req.query
+    console.log("ONE_VAL: " + decodeURI(one_val))
     const UPDATE_USER_QUERY = `UPDATE ${table} SET ${one}='${decodeURI(one_val)}' WHERE uid='${uid}'`
     connection.query(UPDATE_USER_QUERY, (err, result) => {
         if(err) {
