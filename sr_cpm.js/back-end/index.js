@@ -934,25 +934,21 @@ app.post('/upload-file', async (req, res) => {
             });
             console.log("UPLOAD FAILED")
         } else {
-            console.log("UPLOAD SUCCESS: " + req.files.avatar.name)
-
             //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
             let avatar = req.files.avatar;
-            var date_now = Date(Date.now())
             var month = getMonth(Date.now()) + 1
-            let upload_path = "./uploads/sn_uploads/fck2020/m_" + month + "/" + avatar.name
-            console.log("PATH: "+upload_path)
+            let upload_path = "/sn_uploads/fck2020/m_" + month + "/" + avatar.name
+
             //Use the mv() method to place the file in upload directory (i.e. "uploads")
-            //avatar.mv('./uploads/' + avatar.name);
-            
+            avatar.mv("./uploads" + upload_path);
 
             //send response
             res.send({
                 status: true,
                 message: 'File is uploaded',
                 data: {
-                    // name: avatar.name,
-                    // path: upload_path
+                    name: avatar.name,
+                    path: upload_path
                 }
             });
         }
