@@ -941,7 +941,7 @@ app.post('/upload-file', async (req, res) => {
             
             //Use the mv() method to place the file in upload directory (i.e. "uploads")
             //avatar.mv('./uploads/' + avatar.name);
-            var date = Date.now()
+            var date = Date(Date.now())
             console.log("DATE: " + date.toString())
 
             //send response
