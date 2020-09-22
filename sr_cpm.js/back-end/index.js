@@ -926,7 +926,7 @@ app.get('/nodemailer/sendquestions', (req, res) => {
 //#region Upload File
 app.post('/upload-file', async (req, res) => {
     try {
-        if(!req.file) {
+        if(!req.files) {
             res.send({
                 status: false,
                 message: 'No file uploaded'
