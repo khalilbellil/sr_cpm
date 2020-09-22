@@ -933,23 +933,24 @@ app.post('/upload-file', async (req, res) => {
             });
             console.log("UPLOAD FAILED")
         } else {
-            console.log("UPLOAD SUCCESS: " + req.avatar.name)
-            // //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
-            // let avatar = req.files.avatar;
-            
-            // //Use the mv() method to place the file in upload directory (i.e. "uploads")
-            // avatar.mv('./uploads/' + avatar.name);
+            console.log("UPLOAD SUCCESS: " + req.files.avatar.name)
 
-            // //send response
-            // res.send({
-            //     status: true,
-            //     message: 'File is uploaded',
-            //     data: {
-            //         name: avatar.name,
-            //         mimetype: avatar.mimetype,
-            //         size: avatar.size
-            //     }
-            // });
+            //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
+            let avatar = req.files.avatar;
+            
+            //Use the mv() method to place the file in upload directory (i.e. "uploads")
+            avatar.mv('./uploads/' + avatar.name);
+
+            //send response
+            res.send({
+                status: true,
+                message: 'File is uploaded',
+                data: {
+                    name: avatar.name,
+                    mimetype: avatar.mimetype,
+                    size: avatar.size
+                }
+            });
         }
     } catch (err) {
         res.status(500).send(err);
