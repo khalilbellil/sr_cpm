@@ -933,7 +933,7 @@ app.post('/upload-file', async (req, res) => {
             });
             console.log("UPLOAD FAILED")
         } else {
-            console.log("UPLOAD SUCCESS: " + req.name)
+            console.log("UPLOAD SUCCESS: " + req.avatar.name)
             // //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
             // let avatar = req.files.avatar;
             
