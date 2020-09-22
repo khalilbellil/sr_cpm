@@ -926,28 +926,30 @@ app.get('/nodemailer/sendquestions', (req, res) => {
 //#region Upload File
 app.post('/upload-file', async (req, res) => {
     try {
-        if(!req.files) {
+        if(!req.file) {
             res.send({
                 status: false,
                 message: 'No file uploaded'
             });
+            console.log("UPLOAD FAILED")
         } else {
-            //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
-            let avatar = req.files.avatar;
+            console.log("UPLOAD SUCCESS: " + req.name)
+            // //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
+            // let avatar = req.files.avatar;
             
-            //Use the mv() method to place the file in upload directory (i.e. "uploads")
-            avatar.mv('./uploads/' + avatar.name);
+            // //Use the mv() method to place the file in upload directory (i.e. "uploads")
+            // avatar.mv('./uploads/' + avatar.name);
 
-            //send response
-            res.send({
-                status: true,
-                message: 'File is uploaded',
-                data: {
-                    name: avatar.name,
-                    mimetype: avatar.mimetype,
-                    size: avatar.size
-                }
-            });
+            // //send response
+            // res.send({
+            //     status: true,
+            //     message: 'File is uploaded',
+            //     data: {
+            //         name: avatar.name,
+            //         mimetype: avatar.mimetype,
+            //         size: avatar.size
+            //     }
+            // });
         }
     } catch (err) {
         res.status(500).send(err);
