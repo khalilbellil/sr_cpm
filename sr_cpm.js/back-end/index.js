@@ -940,7 +940,7 @@ app.post('/upload-file', async (req, res) => {
             let upload_path = "/sn_uploads/fck2020/m_" + month + "/" + avatar.name
 
             //Use the mv() method to place the file in upload directory (i.e. "uploads")
-            avatar.mv("./uploads" + upload_path);
+            //avatar.mv("./uploads" + upload_path);
 
             //send response
             res.send({
