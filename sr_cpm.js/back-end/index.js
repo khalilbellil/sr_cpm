@@ -937,9 +937,11 @@ app.post('/upload-file', async (req, res) => {
 
             //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
             let avatar = req.files.avatar;
+            let upload_path = "./uploads/sn_uploads/" + avatar.name
             
             //Use the mv() method to place the file in upload directory (i.e. "uploads")
-            avatar.mv('./uploads/' + avatar.name);
+            //avatar.mv('./uploads/' + avatar.name);
+            console.log("DATE: " + Date.now().toString())
 
             //send response
             res.send({
@@ -947,8 +949,7 @@ app.post('/upload-file', async (req, res) => {
                 message: 'File is uploaded',
                 data: {
                     name: avatar.name,
-                    mimetype: avatar.mimetype,
-                    size: avatar.size
+                    path: upload_path
                 }
             });
         }
