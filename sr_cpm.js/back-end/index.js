@@ -943,7 +943,7 @@ app.post('/upload-file', async (req, res) => {
             avatar.mv("./uploads" + upload_path);
 
             //send response
-            res.send({
+            return res.send({
                 status: true,
                 message: 'File is uploaded',
                 data: {
