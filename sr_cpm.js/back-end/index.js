@@ -409,8 +409,8 @@ app.get('/projects/cancel', (req, res) => {
                                         console.log(err)
                                         return res.send(err)
                                     } else {
-                                        const GET_EMAIL_QUERY = `SELECT gender, lastname, firstname, lang, email FROM sr_client WHERE uid='${uid_client}'`
-                                        connection.query(GET_EMAIL_QUERY, (err, result_client) => {
+                                        const GET_CLIENT_QUERY = `SELECT gender, lastname, firstname, lang, email FROM sr_client WHERE uid='${uid_client}'`
+                                        connection.query(GET_CLIENT_QUERY, (err, result_client) => {
                                             if(err) {
                                                 console.log(err)
                                                 return res.send(err)
@@ -424,6 +424,32 @@ app.get('/projects/cancel', (req, res) => {
                                                 if (name === undefined){
                                                     name = result_client[0].firstname;
                                                     title = ""
+                                                }
+                                                if (result_emailcode[0].email_code === "cancelProjectReason7"){
+                                                    const SELECT_PROJECT_QUESTION_QUERY = `SELECT service_question_uid, message FROM sr_project_sent_question WHERE uid_project='${uid}' LIMIT 1`
+                                                    connection.query(SELECT_PROJECT_QUESTION_QUERY, (err, result_project_questions) => {
+                                                        if(err) {
+                                                            console.log(err)
+                                                            content = content.replace(`::questions::`, ``)
+                                                        } else {
+                                                            const SELECT_QUESTION_QUERY = `SELECT question_${result_client[0].lang} as question FROM sr_service_question WHERE uid IN(${result_project_questions[0].service_question_uid}) AND active='yes'`
+                                                            connection.query(SELECT_QUESTION_QUERY, (err, result_questions) => {
+                                                                if(err) {
+                                                                    console.log(err)
+                                                                    return res.send(err)
+                                                                } else {
+                                                                    if (result_questions !== undefined){
+                                                                        let questions = ''
+                                                                        result_questions.forEach(element => {
+                                                                            questions += `<li>${element.question}</li>`
+                                                                        });
+                                                                    }
+                                                                    content = content.replace(`::questions::`, `<ul>${questions}<li>${result_project_questions[0].message}</li></ul>`)
+                                                                }
+                                                            })
+                                                            
+                                                        }
+                                                    })
                                                 }
                                                 content = content.replace(`::titre::`, `${title}`)
                                                 content = content.replace(`::nom::`, `${name}`)
@@ -444,6 +470,7 @@ app.get('/projects/cancel', (req, res) => {
                                                         return res.send('Envoi du courriel réussi');
                                                     }
                                                 });
+
                                             }
                                         })
                                     }
@@ -870,7 +897,7 @@ app.get('/nodemailer/send', (req, res) => {
     })
 })
 app.get('/nodemailer/sendquestions', (req, res) => {
-    const{ uid_questions, uid_service, message, uid_client, name } = req.query
+    const{ uid_questions, uid_service, message, uid_client, uid_project, name } = req.query
     const GET_EMAIL_QUERY = `SELECT gender, lastname, firstname, lang, email FROM sr_client WHERE uid='${uid_client}'`
     connection.query(GET_EMAIL_QUERY, (err, result_client) => {
         if(err) {
@@ -900,6 +927,7 @@ app.get('/nodemailer/sendquestions', (req, res) => {
                                     }
                                     content = content.replace(`::questions::`, `<ul>${questions}<li>${message}</li></ul>`)
                                     content = content.replace(`::service::`, `<b>${service}</b>`)
+                                    content = content.replace(`::uid_client::`, `${uid_client}`)
                                     var mailOptions = {
                                         from: 'clients@soumissionrenovation.ca',
                                         to: `${result_client[0].email}`,
@@ -911,8 +939,15 @@ app.get('/nodemailer/sendquestions', (req, res) => {
                                             console.log(error);
                                             return res.send('Erreur lors de l\'envoi du courriel !')
                                         } else {
+                                            const INSERT = `INSERT INTO sr_project_sent_question(uid_project, service_question_uid, answered, message) VALUES('${uid_project}', '${uid_questions}', 0, '${message}')`
+                                            connection.query(INSERT, (err, result_insert) => {
+                                                if(err) {
+                                                    console.log(err)
+                                                    return res.send(err)
+                                                } else {
                                             console.log('Resultat de l\'envoie du courriel : ' + info.response);
                                             return res.send('Envoi du courriel réussi');
+
                                         }
                                     });
                                 }
