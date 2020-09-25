@@ -906,54 +906,57 @@ app.get('/nodemailer/sendquestions', (req, res) => {
         } else {
             const SELECT_QUESTION_QUERY = `SELECT question_${result_client[0].lang} as question FROM sr_service_question WHERE uid IN(${uid_questions}) AND active='yes'`
             connection.query(SELECT_QUESTION_QUERY, (err, result) => {
-                    const SELECT_SERVICE_QUERY = `SELECT name_${result_client[0].lang} as name FROM sr_service WHERE uid='${uid_service}'`
-                    connection.query(SELECT_SERVICE_QUERY, (err, result3) => {
-                            const SELECT_EMAIL_QUERY = `SELECT subject_${result_client[0].lang} as subject, content_${result_client[0].lang} as content FROM sr_email WHERE name='${name}' AND active='yes'`
-                            connection.query(SELECT_EMAIL_QUERY, (err, result2) => {
-                                if(err) {
-                                    console.log(err)
-                                    return res.send(err)
+                const SELECT_SERVICE_QUERY = `SELECT name_${result_client[0].lang} as name FROM sr_service WHERE uid='${uid_service}'`
+                connection.query(SELECT_SERVICE_QUERY, (err, result3) => {
+                    const SELECT_EMAIL_QUERY = `SELECT subject_${result_client[0].lang} as subject, content_${result_client[0].lang} as content FROM sr_email WHERE name='${name}' AND active='yes'`
+                    connection.query(SELECT_EMAIL_QUERY, (err, result2) => {
+                        if(err) {
+                            console.log(err)
+                            return res.send(err)
+                        } else {
+                            var content = result2[0].content;
+                            var questions = "";
+                            var service = "rénovation"
+                            if(result3[0] !== undefined){
+                                service = result3[0].name
+                            }
+                            if (result !== undefined){
+                                result.forEach(element => {
+                                    questions += `<li>${element.question}</li>`
+                                });
+                            }
+                            content = content.replace(`::questions::`, `<ul>${questions}<li>${message}</li></ul>`)
+                            content = content.replace(`::service::`, `<b>${service}</b>`)
+                            content = content.replace(`::uid_client::`, `${uid_client}`)
+                            var mailOptions = {
+                                from: 'clients@soumissionrenovation.ca',
+                                to: `${result_client[0].email}`,
+                                subject: `${result2[0].subject}`,
+                                html: `${content}`
+                            };
+                            transporter.sendMail(mailOptions, function(error, info){
+                                if (error) {
+                                    console.log(error);
+                                    return res.send('Erreur lors de l\'envoi du courriel !')
                                 } else {
-                                    var content = result2[0].content;
-                                    var questions = "";
-                                    var service = "rénovation"
-                                    if(result3[0] !== undefined){
-                                        service = result3[0].name
-                                    }
-                                    if (result !== undefined){
-                                        result.forEach(element => {
-                                            questions += `<li>${element.question}</li>`
-                                        });
-                                    }
-                                    content = content.replace(`::questions::`, `<ul>${questions}<li>${message}</li></ul>`)
-                                    content = content.replace(`::service::`, `<b>${service}</b>`)
-                                    content = content.replace(`::uid_client::`, `${uid_client}`)
-                                    var mailOptions = {
-                                        from: 'clients@soumissionrenovation.ca',
-                                        to: `${result_client[0].email}`,
-                                        subject: `${result2[0].subject}`,
-                                        html: `${content}`
-                                    };
-                                    transporter.sendMail(mailOptions, function(error, info){
-                                        if (error) {
-                                            console.log(error);
-                                            return res.send('Erreur lors de l\'envoi du courriel !')
+                                    const INSERT = `INSERT INTO sr_project_sent_question(uid_project, service_question_uid, answered, message) VALUES('${uid_project}', '${uid_questions}', 0, '${message}')`
+                                    connection.query(INSERT, (err, result_insert) => {
+                                        if(err) {
+                                            console.log(err)
+                                            return res.send(err)
                                         } else {
-                                            const INSERT = `INSERT INTO sr_project_sent_question(uid_project, service_question_uid, answered, message) VALUES('${uid_project}', '${uid_questions}', 0, '${message}')`
-                                            connection.query(INSERT, (err, result_insert) => {
-                                                if(err) {
-                                                    console.log(err)
-                                                    return res.send(err)
-                                                } else {
                                             console.log('Resultat de l\'envoie du courriel : ' + info.response);
                                             return res.send('Envoi du courriel réussi');
-
                                         }
-                                    });
+                                    })
                                 }
-                            })
+                            });
+                        }
                     })
+                    
+                })
             })
+            
         }
     })
 })
