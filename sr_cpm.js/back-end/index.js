@@ -626,7 +626,7 @@ app.get('/services', (req, res) => {
 })
 app.get('/subservices', (req, res) => {
     const{ uid_service } = req.query
-    const SELECT_QUERY = `SELECT * FROM sr_subservice WHERE active='yes' AND uid_service='${uid_service}' ORDER BY sn_custom ASC`
+    const SELECT_QUERY = `SELECT * FROM sr_subservice WHERE active='yes' AND uid_service='${uid_service}' ORDER BY lead_price ASC`
     connection.query(SELECT_QUERY, (err, result) => {
         if(err) {
             return res.send(err)
