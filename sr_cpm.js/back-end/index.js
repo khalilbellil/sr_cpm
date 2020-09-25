@@ -613,7 +613,7 @@ app.get('/clients/get_by_project', (req, res) => {
 
 //#region others
 app.get('/services', (req, res) => {
-    const SELECT_ALL_QUERY = 'SELECT * FROM sr_service WHERE active="yes"'
+    const SELECT_ALL_QUERY = 'SELECT * FROM sr_service WHERE active="yes" ORDER BY name_long_fr ASC'
     connection.query(SELECT_ALL_QUERY, (err, result) => {
         if(err) {
             return res.send(err)
