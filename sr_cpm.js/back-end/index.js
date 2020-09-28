@@ -557,7 +557,7 @@ app.get('/clients/lock', (req, res) => {
             }else{
                 if (result1[0].uid_agent !== username){
                     return res.json({
-                        data: {already_locked: "yes"}
+                        data: {already_locked: "yes", locked_by: result1[0].uid_agent}
                     })
                 }else{
                     return res.json({
