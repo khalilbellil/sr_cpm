@@ -69,6 +69,9 @@ function stringReturnIfNull(string, result_if_null){
     }
     return string
 }
+function hash(s){
+    return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);              
+}
 //#endregion
 
 //#region Save_ajax
@@ -925,6 +928,31 @@ app.get('/nodemailer/sendquestions', (req, res) => {
                                     questions += `<li>${element.question}</li>`
                                 });
                             }
+                            let answer_link = ""
+                            let cancel_project_link = ""
+                            let token_project = hash(uid_project)
+                            if (result_client[0].token !== '' && result_client[0].token !== undefined){
+                                if (result_client[0].lang === 'en'){
+                                    answer_link = "https://renoquotes.com/en/additional-informations?token=" + result_client[0].token
+                                    cancel_project_link = `https://renoquotes.com/en/cancel-a-project?cl=${uid_client}&prj=${token_project}`
+                                }else{
+                                    answer_link = "https://soumissionrenovation.ca/fr/demande-d-informations-supplementaires?token=" + result_client[0].token
+                                    cancel_project_link = `https://soumissionrenovation.ca/fr/annuler-un-projet?cl=${uid_client}&prj=${token_project}`
+                                }
+                            }else{
+                                //generate token for new client:
+                                let token_client = hash(uid_client)
+                                console.log("CLIENT TOKEN: " + token_client)//test
+                                const UPDATE_TOKEN = `UPDATE sr_client SET token='${token_client}' WHERE uid='${uid_client}'`
+                                connection.query(UPDATE_TOKEN, (err, result_token) => {
+                                    if(err) {
+                                        console.log(err)
+                                        return res.send(err)
+                                    }
+                                })
+                            }
+                            content = content.replace(`::cancel_project_link::`, cancel_project_link)
+                            content = content.replace(`::answer_link::`, answer_link)
                             content = content.replace(`::questions::`, `<ul>${questions}<li>${message}</li></ul>`)
                             content = content.replace(`::service::`, `<b>${service}</b>`)
                             content = content.replace(`::uid_client::`, `${uid_client}`)
